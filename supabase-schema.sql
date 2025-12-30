@@ -112,8 +112,8 @@ CREATE TABLE public.task_blockers (
   UNIQUE(task_id, blocker_id)
 );
 
--- Documents table
-CREATE TABLE public.documents (
+-- Project files table
+CREATE TABLE public.project_files (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   task_id UUID REFERENCES public.tasks(id) ON DELETE SET NULL,
@@ -180,7 +180,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blockers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocker_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.task_blockers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attachments ENABLE ROW LEVEL SECURITY;
@@ -276,7 +276,7 @@ CREATE TRIGGER update_milestones_updated_at BEFORE UPDATE ON public.milestones
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON public.documents
+CREATE TRIGGER update_project_files_updated_at BEFORE UPDATE ON public.project_files
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON public.comments
