@@ -36,7 +36,7 @@ function NavButton({ icon, label, active, collapsed, onClick, badge, badgeRed })
   );
 }
 
-export default function Sidebar({ collapsed, setCollapsed, currentView, setCurrentView }) {
+export default function Sidebar({ collapsed, setCollapsed, currentView, setCurrentView, user, onLogout }) {
   const navItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'projects', icon: '📁', label: 'Projects', badge: 3 },
@@ -121,22 +121,37 @@ export default function Sidebar({ collapsed, setCollapsed, currentView, setCurre
 
       {/* User */}
       <div className="border-t border-gray-800 p-3">
-        <div
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-800 cursor-pointer ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
+        <div className="relative group">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-800 cursor-pointer ${
+              collapsed ? 'justify-center' : ''
+            }`}
           >
-            AC
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">Alex Chen</p>
-              <p className="text-xs text-gray-400 truncate">alex@company.com</p>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' }}
+            >
+              {user?.email?.substring(0, 2).toUpperCase() || 'U'}
             </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Logout button */}
+          {!collapsed && (
+            <button
+              onClick={onLogout}
+              className="w-full mt-2 px-3 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <span>🚪</span>
+              <span>Logout</span>
+            </button>
           )}
         </div>
       </div>

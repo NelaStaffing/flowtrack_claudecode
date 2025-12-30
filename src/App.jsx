@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import AuthPage from './components/auth/AuthPage';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
 import CopilotPanel from './components/layout/CopilotPanel';
@@ -9,11 +11,29 @@ import ProjectDetail from './components/projects/ProjectDetail';
 import TasksView from './components/tasks/TasksView';
 
 function App() {
+  const { user, loading, signOut } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [viewContext, setViewContext] = useState({});
   const [showProjectWizard, setShowProjectWizard] = useState(false);
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth page if not authenticated
+  if (!user) {
+    return <AuthPage />;
+  }
 
   const navigate = (view, context = {}) => {
     setCurrentView(view);
@@ -32,6 +52,10 @@ function App() {
   const handleSearch = (query) => {
     // Implement global search functionality
     console.log('Searching for:', query);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const getCopilotContext = () => {
@@ -79,7 +103,7 @@ function App() {
         );
 
       case 'my-tasks':
-        return <TasksView onNavigate={navigate} currentUserId={null} />;
+        return <TasksView onNavigate={navigate} currentUserId={user?.id} />;
 
       case 'timeline':
         return (
@@ -168,6 +192,8 @@ function App() {
         setCollapsed={setSidebarCollapsed}
         currentView={currentView}
         setCurrentView={navigate}
+        user={user}
+        onLogout={handleLogout}
       />
 
       {/* Main Content */}
@@ -191,6 +217,7 @@ function App() {
         <ProjectWizard
           onClose={() => setShowProjectWizard(false)}
           onComplete={handleProjectCreated}
+          userId={user?.id}
         />
       )}
 

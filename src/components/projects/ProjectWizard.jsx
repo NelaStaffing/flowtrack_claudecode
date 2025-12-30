@@ -29,7 +29,7 @@ function WizardStep({ number, title, description, active, completed }) {
   );
 }
 
-export default function ProjectWizard({ onClose, onComplete }) {
+export default function ProjectWizard({ onClose, onComplete, userId }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -133,6 +133,7 @@ export default function ProjectWizard({ onClose, onComplete }) {
         status: 'planning',
         health: 'on-track',
         progress: 0,
+        created_by: userId,
       };
 
       const { data: project, error } = await supabaseHelpers.createProject(projectData);
@@ -141,6 +142,17 @@ export default function ProjectWizard({ onClose, onComplete }) {
         console.error('Error creating project:', error);
         alert('Failed to create project. Please try again.');
         return;
+      }
+
+      // Add creator as project member with owner role
+      if (project && project[0]) {
+        await supabase.from('project_members').insert([
+          {
+            project_id: project[0].id,
+            user_id: userId,
+            role: 'owner',
+          },
+        ]);
       }
 
       // Create milestones if any
