@@ -435,10 +435,274 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
             </div>
           )}
 
-          {/* Steps 4, 5, 6 will be added in the next part */}
-          {currentStep > 3 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Step {currentStep} content coming in next iteration...</p>
+          {/* Step 4: Tech Stack Recommendations */}
+          {currentStep === 4 && techStack && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  🛠️ Tech Stack Recommendations
+                </h3>
+                <p className="text-gray-600">
+                  Based on your requirements, here's what we recommend
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {techStack?.map((recommendation, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
+                          {recommendation.category}
+                        </span>
+                        <h4 className="text-2xl font-bold text-gray-900 mt-1">
+                          {recommendation.recommended}
+                        </h4>
+                        <p className="text-gray-600 mt-2">{recommendation.reason}</p>
+                      </div>
+                      <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium flex-shrink-0 ml-4">
+                        ✓ Use This
+                      </button>
+                    </div>
+
+                    {recommendation.alternatives && recommendation.alternatives.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-xs font-medium text-gray-500 mb-2">Alternatives:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {recommendation.alternatives.map((alt, altIndex) => (
+                            <button
+                              key={altIndex}
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-purple-100 hover:text-purple-700 transition-colors"
+                            >
+                              {alt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                  ✓ Approve Recommendations
+                </button>
+                <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200">
+                  🔄 Regenerate
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: AI-Generated Plan */}
+          {currentStep === 5 && plan && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">📋 Project Plan</h3>
+                <p className="text-gray-600">
+                  AI-generated milestones and timeline for your project
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {plan?.milestones?.map((milestone, index) => {
+                  const isFirst = index === 0;
+                  const isLast = index === plan.milestones.length - 1;
+
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                                isFirst
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-purple-100 text-purple-600'
+                              }`}
+                            >
+                              {index + 1}
+                            </div>
+                            {!isLast && (
+                              <div className="w-0.5 h-16 bg-gray-200 mt-2"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-900">
+                              {milestone.name}
+                            </h4>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Day {milestone.daysFromStart} from project start
+                            </p>
+                            <div className="mt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-medium text-gray-600">
+                                  Confidence:
+                                </span>
+                                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-xs">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      milestone.confidence >= 80
+                                        ? 'bg-green-500'
+                                        : milestone.confidence >= 60
+                                        ? 'bg-yellow-500'
+                                        : 'bg-orange-500'
+                                    }`}
+                                    style={{ width: `${milestone.confidence}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm font-semibold text-gray-700">
+                                  {milestone.confidence}%
+                                </span>
+                              </div>
+                            </div>
+                            <ul className="mt-4 space-y-2">
+                              {milestone.tasks?.map((task, taskIndex) => (
+                                <li
+                                  key={taskIndex}
+                                  className="flex items-start gap-2 text-sm text-gray-700"
+                                >
+                                  <span className="text-purple-500 mt-0.5">▸</span>
+                                  <span>{task}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                  ✓ Approve Plan
+                </button>
+                <button className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200">
+                  ✏️ Adjust
+                </button>
+                <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200">
+                  🔄 Regenerate
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Blockers & Review */}
+          {currentStep === 6 && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  ⚠️ Potential Blockers
+                </h3>
+                <p className="text-gray-600">
+                  Here are some items that need attention before starting
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {blockers?.map((blocker, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border-l-4 rounded-lg p-4 flex items-start gap-4"
+                    style={{
+                      borderLeftColor:
+                        blocker.severity === 'high'
+                          ? '#EF4444'
+                          : blocker.severity === 'medium'
+                          ? '#F59E0B'
+                          : '#6B7280',
+                    }}
+                  >
+                    <div
+                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        blocker.severity === 'high'
+                          ? 'bg-red-100 text-red-600'
+                          : blocker.severity === 'medium'
+                          ? 'bg-yellow-100 text-yellow-600'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {blocker.severity === 'high'
+                        ? '🔴'
+                        : blocker.severity === 'medium'
+                        ? '🟡'
+                        : '⚪'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{blocker.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{blocker.description}</p>
+                        </div>
+                        <span
+                          className={`text-xs font-bold uppercase px-2 py-1 rounded ${
+                            blocker.severity === 'high'
+                              ? 'bg-red-100 text-red-700'
+                              : blocker.severity === 'medium'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {blocker.severity}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 font-medium">
+                          📌 Decide Now
+                        </button>
+                        <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200 font-medium">
+                          ✓ Create Task
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200 mt-8">
+                <h4 className="font-bold text-gray-900 mb-4">📊 Project Summary</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Project Name</p>
+                    <p className="font-semibold text-gray-900">{basicInfo.name}</p>
+                  </div>
+                  {basicInfo.client && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Client</p>
+                      <p className="font-semibold text-gray-900">{basicInfo.client}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Deliverables</p>
+                    <p className="font-semibold text-gray-900">
+                      {analysis?.deliverables?.length || 0} items
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Technologies</p>
+                    <p className="font-semibold text-gray-900">{techStack?.length || 0} tools</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Milestones</p>
+                    <p className="font-semibold text-gray-900">
+                      {plan?.milestones?.length || 0} phases
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Blockers</p>
+                    <p className="font-semibold text-gray-900">{blockers?.length || 0} items</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
