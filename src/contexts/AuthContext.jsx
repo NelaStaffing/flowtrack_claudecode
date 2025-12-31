@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
       // Create user profile in public.users table
       if (data.user) {
-        await supabase.from('users').insert([
+        const { error: profileError } = await supabase.from('users').insert([
           {
             id: data.user.id,
             email: data.user.email,
@@ -60,10 +60,16 @@ export const AuthProvider = ({ children }) => {
             role: 'developer',
           },
         ]);
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw new Error(`Database error saving new user: ${profileError.message}`);
+        }
       }
 
       return { data, error: null };
     } catch (error) {
+      console.error('SignUp error:', error);
       return { data: null, error };
     }
   };
