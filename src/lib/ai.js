@@ -129,6 +129,12 @@ Format as JSON:
   },
 
   async callClaude(prompt) {
+    // Note: Direct browser calls to Claude API will fail due to CORS
+    // For now, always use mock data. In production, you'd use a backend proxy.
+    console.warn('Using mock AI data (Claude API requires backend proxy to avoid CORS)');
+    return this.getMockResponse(prompt);
+
+    /* Uncomment this when you set up a backend proxy
     if (!CLAUDE_API_KEY) {
       console.warn('Claude API key not found');
       return this.getMockResponse(prompt);
@@ -172,6 +178,7 @@ Format as JSON:
       console.error('Error calling Claude API:', error);
       return this.getMockResponse(prompt);
     }
+    */
   },
 
   getMockResponse(prompt) {

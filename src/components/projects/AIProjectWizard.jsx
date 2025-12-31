@@ -401,7 +401,7 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-4">Core Deliverables</h4>
                 <div className="space-y-3">
-                  {analysis.deliverables.map((deliverable, index) => (
+                  {analysis?.deliverables?.map((deliverable, index) => (
                     <div
                       key={index}
                       className="flex gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-purple-300 transition-colors"
