@@ -189,6 +189,7 @@ ALTER TABLE public.attachments ENABLE ROW LEVEL SECURITY;
 
 -- Users can read all users but only update their own profile
 CREATE POLICY "Users can view all users" ON public.users FOR SELECT USING (true);
+CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
 
 -- Projects: Users can see projects they're members of
