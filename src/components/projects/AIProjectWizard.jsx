@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { supabase, supabaseHelpers } from '@lib/supabase';
-import { aiService } from '@lib/ai';
+import { supabase, supabaseHelpers } from '../../lib/supabase';
+import { aiService } from '../../lib/ai';
 
 function WizardStep({ number, title, description, active, completed }) {
   return (
