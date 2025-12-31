@@ -24,7 +24,9 @@ export const supabaseHelpers = {
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) console.error('Error fetching projects:', error)
+    if (error) {
+      console.error('Error fetching projects:', error.message, error)
+    }
     return { data, error }
   },
 
@@ -72,7 +74,9 @@ export const supabaseHelpers = {
     }
 
     const { data, error } = await query
-    if (error) console.error('Error fetching tasks:', error)
+    if (error) {
+      console.error('Error fetching tasks:', error.message, error)
+    }
     return { data, error }
   },
 
