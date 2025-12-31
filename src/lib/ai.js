@@ -1,184 +1,72 @@
-// AI Service using Claude (Anthropic)
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+import { supabase } from './supabase';
+
+const USE_EDGE_FUNCTION = import.meta.env.VITE_USE_AI_EDGE_FUNCTION === 'true';
 
 export const aiService = {
   async analyzeProjectBrief(basicInfo, brief) {
-    const prompt = `You are an expert project analyst. Analyze this project brief and identify the core deliverables.
+    if (USE_EDGE_FUNCTION) {
+      return this.callEdgeFunction('analyze', {
+        name: basicInfo.name,
+        client: basicInfo.client,
+        brief,
+      });
+    }
 
-Project Name: ${basicInfo.name}
-${basicInfo.client ? `Client: ${basicInfo.client}` : ''}
-
-Brief:
-${brief}
-
-Provide a JSON response with:
-1. A concise project summary (2-3 sentences)
-2. List of 3-5 core deliverables (each with a title and brief description)
-
-Format:
-{
-  "summary": "Project summary here",
-  "deliverables": [
-    {"title": "Deliverable 1", "description": "Brief description"}
-  ]
-}`;
-
-    return this.callClaude(prompt);
+    // Fallback to mock data
+    return this.getMockResponse('analyze');
   },
 
   async recommendTechStack(basicInfo, brief, deliverables) {
-    const prompt = `You are a technical architect. Based on this project, recommend appropriate technologies.
-
-Project: ${basicInfo.name}
-Brief: ${brief}
-
-Deliverables:
-${deliverables.map((d, i) => `${i + 1}. ${d.title}: ${d.description}`).join('\n')}
-
-Recommend technologies in these categories:
-- Frontend/Form Builder
-- Backend/Automation
-- Database/Storage
-- Image/File Processing (if applicable)
-- Other relevant tools
-
-For each recommendation, provide:
-- Category name
-- Recommended tool name
-- Why it's recommended (1 sentence)
-- Alternatives (2-3 other options)
-
-Format as JSON:
-{
-  "recommendations": [
-    {
-      "category": "Category Name",
-      "recommended": "Tool Name",
-      "reason": "Why it's good for this project",
-      "alternatives": ["Alt1", "Alt2", "Alt3"]
+    if (USE_EDGE_FUNCTION) {
+      return this.callEdgeFunction('techStack', {
+        name: basicInfo.name,
+        brief,
+        deliverables,
+      });
     }
-  ]
-}`;
 
-    return this.callClaude(prompt);
+    return this.getMockResponse('recommend');
   },
 
   async generateProjectPlan(basicInfo, brief, deliverables, techStack) {
-    const prompt = `You are a project manager. Create a realistic project plan with milestones and tasks.
-
-Project: ${basicInfo.name}
-Brief: ${brief}
-
-Deliverables:
-${deliverables.map((d, i) => `${i + 1}. ${d.title}`).join('\n')}
-
-Tech Stack:
-${techStack.map((t) => `${t.category}: ${t.recommended}`).join('\n')}
-
-Create 4-6 milestones with:
-- Name
-- 3-4 tasks per milestone
-- Estimated completion confidence (0-100)
-- Suggested due date offset from project start (in days)
-
-Format as JSON:
-{
-  "milestones": [
-    {
-      "name": "Milestone Name",
-      "tasks": ["Task 1", "Task 2", "Task 3"],
-      "confidence": 85,
-      "daysFromStart": 14
+    if (USE_EDGE_FUNCTION) {
+      return this.callEdgeFunction('plan', {
+        name: basicInfo.name,
+        brief,
+        deliverables,
+        techStack,
+      });
     }
-  ]
-}`;
 
-    return this.callClaude(prompt);
+    return this.getMockResponse('project plan');
   },
 
   async identifyBlockers(basicInfo, brief, deliverables, techStack) {
-    const prompt = `You are a risk analyst. Identify potential blockers and open items for this project.
-
-Project: ${basicInfo.name}
-Brief: ${brief}
-
-Deliverables:
-${deliverables.map((d) => d.title).join(', ')}
-
-Tech Stack:
-${techStack.map((t) => `${t.category}: ${t.recommended}`).join(', ')}
-
-Identify 3-5 potential blockers/open items with:
-- Title (short, clear)
-- Description (why this is a concern)
-- Severity (high/medium/low)
-
-Format as JSON:
-{
-  "blockers": [
-    {
-      "title": "Blocker title",
-      "description": "Why this needs attention",
-      "severity": "high"
+    if (USE_EDGE_FUNCTION) {
+      return this.callEdgeFunction('blockers', {
+        name: basicInfo.name,
+        brief,
+        deliverables,
+        techStack,
+      });
     }
-  ]
-}`;
 
-    return this.callClaude(prompt);
+    return this.getMockResponse('blockers');
   },
 
-  async callClaude(prompt) {
-    // Note: Direct browser calls to Claude API will fail due to CORS
-    // For now, always use mock data. In production, you'd use a backend proxy.
-    console.warn('Using mock AI data (Claude API requires backend proxy to avoid CORS)');
-    return this.getMockResponse(prompt);
-
-    /* Uncomment this when you set up a backend proxy
-    if (!CLAUDE_API_KEY) {
-      console.warn('Claude API key not found');
-      return this.getMockResponse(prompt);
-    }
-
+  async callEdgeFunction(type, data) {
     try {
-      const response = await fetch(CLAUDE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 2048,
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        }),
+      const { data: result, error } = await supabase.functions.invoke('ai-analyze', {
+        body: { type, data },
       });
 
-      if (!response.ok) {
-        throw new Error(`Claude API error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const content = data.content[0].text;
-
-      // Extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-
-      throw new Error('No JSON found in Claude response');
+      if (error) throw error;
+      return result;
     } catch (error) {
-      console.error('Error calling Claude API:', error);
-      return this.getMockResponse(prompt);
+      console.error('Edge function error:', error);
+      console.warn('Falling back to mock data');
+      return this.getMockResponse(type);
     }
-    */
   },
 
   getMockResponse(prompt) {
