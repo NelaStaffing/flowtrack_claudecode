@@ -6,7 +6,7 @@ import TopBar from './components/layout/TopBar';
 import CopilotPanel from './components/layout/CopilotPanel';
 import Dashboard from './components/dashboard/Dashboard';
 import ProjectsView from './components/projects/ProjectsView';
-import ProjectWizard from './components/projects/ProjectWizard';
+import AIProjectWizard from './components/projects/AIProjectWizard';
 import ProjectDetail from './components/projects/ProjectDetail';
 import TasksView from './components/tasks/TasksView';
 
@@ -214,7 +214,7 @@ function App() {
 
       {/* Project Wizard Modal */}
       {showProjectWizard && (
-        <ProjectWizard
+        <AIProjectWizard
           onClose={() => setShowProjectWizard(false)}
           onComplete={handleProjectCreated}
           userId={user?.id}
