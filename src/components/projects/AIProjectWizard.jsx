@@ -71,13 +71,57 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
   const [milestoneEditForm, setMilestoneEditForm] = useState({ name: '' });
   const [expandedMilestones, setExpandedMilestones] = useState([0]); // First milestone expanded by default
 
+  // Timeline state
+  const [timeline, setTimeline] = useState(null);
+  const [timelineView, setTimelineView] = useState('timeline'); // 'timeline' | 'calendar' | 'gantt'
+  const [signOffDate, setSignOffDate] = useState('');
+  const [stakeholders, setStakeholders] = useState([
+    {
+      id: '1',
+      name: 'Maria Rodriguez',
+      role: 'Project Manager',
+      company: 'Client Corp',
+      availability: 'limited',
+      responseTime: 36,
+      preferredContact: 'email',
+      preferredDays: ['Tuesday', 'Wednesday'],
+      decisionAuthority: 'medium',
+      notes: 'CC assistant on all emails',
+    },
+    {
+      id: '2',
+      name: 'Sarah Chen',
+      role: 'Technical Lead',
+      company: 'Client Corp',
+      availability: 'moderate',
+      responseTime: 12,
+      preferredContact: 'slack',
+      preferredDays: ['Tuesday', 'Wednesday', 'Thursday'],
+      decisionAuthority: 'high',
+      notes: 'Available for quick calls',
+    },
+    {
+      id: '3',
+      name: 'Mike Johnson',
+      role: 'QA Manager',
+      company: 'Client Corp',
+      availability: 'high',
+      responseTime: 4,
+      preferredContact: 'slack',
+      preferredDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      decisionAuthority: 'low',
+      notes: 'Very responsive, ideal for testing phase',
+    },
+  ]);
+
   const steps = [
     { id: 1, title: 'Basic Info', description: 'Name and description' },
     { id: 2, title: 'Brief', description: 'Project details' },
     { id: 3, title: 'Analysis', description: 'AI analyzes requirements' },
     { id: 4, title: 'Tech Stack', description: 'Technology recommendations' },
     { id: 5, title: 'Plan', description: 'AI-generated milestones' },
-    { id: 6, title: 'Blockers', description: 'Potential issues' },
+    { id: 6, title: 'Timeline', description: 'AI timeline planning' },
+    { id: 7, title: 'Review', description: 'Final review' },
   ];
 
   const handleNext = async () => {
@@ -390,6 +434,177 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
       alert('Failed to regenerate. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Timeline generation functions
+  const generateTimeline = (targetDate, milestones, stakeholderList) => {
+    if (!targetDate) return null;
+
+    const events = [];
+    const signOffDateObj = new Date(targetDate);
+    let currentDate = new Date(signOffDateObj);
+
+    // Helper to get buffer days based on availability
+    const getBufferDays = (availability) => {
+      switch (availability) {
+        case 'very-limited':
+          return 6;
+        case 'limited':
+          return 4;
+        case 'moderate':
+          return 2;
+        case 'high':
+          return 1;
+        default:
+          return 2;
+      }
+    };
+
+    // Helper to format date
+    const formatDate = (date) => {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    // Helper to subtract days
+    const subtractDays = (date, days) => {
+      const result = new Date(date);
+      result.setDate(result.getDate() - days);
+      return result;
+    };
+
+    // Add final sign-off event
+    events.push({
+      id: 'final-signoff',
+      date: formatDate(signOffDateObj),
+      type: 'milestone',
+      title: 'Final Sign-Off & Delivery',
+      description: 'Project completion and final client approval',
+      approvalRequired: true,
+      isFinal: true,
+      tasks: ['Final presentation', 'Sign-off documentation', 'Project handover'],
+      completed: false,
+      bufferDays: 0,
+    });
+
+    // Add UAT phase (5-7 days before sign-off)
+    currentDate = subtractDays(currentDate, 7);
+    events.push({
+      id: 'uat-phase',
+      date: formatDate(currentDate),
+      type: 'milestone',
+      title: 'UAT & Testing Phase',
+      description: 'User acceptance testing with client stakeholders',
+      stakeholder: stakeholderList[2], // Mike (QA Manager)
+      approvalRequired: true,
+      tasks: ['UAT execution', 'Bug fixes', 'Final QA'],
+      completed: false,
+      bufferDays: getBufferDays(stakeholderList[2].availability),
+      aiNote: `⚡ ${stakeholderList[2].name} is very responsive - ideal for quick feedback loops during testing`,
+    });
+
+    // Add development milestones from plan
+    milestones?.forEach((milestone, index) => {
+      const bufferDays = getBufferDays('moderate');
+      currentDate = subtractDays(currentDate, milestone.daysFromStart / milestones.length + bufferDays);
+
+      events.push({
+        id: `milestone-${index}`,
+        date: formatDate(currentDate),
+        type: 'milestone',
+        title: milestone.name,
+        description: `Development milestone ${index + 1}`,
+        tasks: milestone.tasks || [],
+        completed: false,
+        bufferDays: bufferDays,
+      });
+    });
+
+    // Add client progress reports (weekly)
+    const reportCount = Math.floor((signOffDateObj - currentDate) / (7 * 24 * 60 * 60 * 1000));
+    for (let i = 1; i <= Math.min(reportCount, 3); i++) {
+      const reportDate = subtractDays(signOffDateObj, i * 7);
+      events.push({
+        id: `progress-${i}`,
+        date: formatDate(reportDate),
+        type: 'progress-report',
+        title: `Weekly Progress Report ${i}`,
+        description: 'Status update to client stakeholders',
+        stakeholder: stakeholderList[0], // Maria (PM)
+        tasks: ['Compile progress report', 'Share updates', 'Address questions'],
+        completed: false,
+        bufferDays: 0,
+        aiNote: `📧 ${stakeholderList[0].name} prefers email updates - use formal documentation format`,
+      });
+    }
+
+    // Add blocker review before final sprint
+    const blockerReviewDate = subtractDays(signOffDateObj, 14);
+    events.push({
+      id: 'blocker-review',
+      date: formatDate(blockerReviewDate),
+      type: 'blocker-review',
+      title: 'Blocker Resolution Checkpoint',
+      description: 'Review and resolve any blocking issues before final sprint',
+      tasks: ['Review open blockers', 'Assign resolution tasks', 'Set deadlines'],
+      completed: false,
+      bufferDays: 2,
+      aiNote: '🚨 Reserved 2 days for blocker resolution before final sprint',
+    });
+
+    // Add requirements sign-off at the beginning
+    events.push({
+      id: 'requirements-signoff',
+      date: formatDate(currentDate),
+      type: 'client-meeting',
+      title: 'Requirements Sign-Off',
+      description: 'Final approval of project requirements and scope',
+      stakeholder: stakeholderList[1], // Sarah (Technical Lead)
+      approvalRequired: true,
+      tasks: ['Present requirements doc', 'Get stakeholder approval', 'Document decisions'],
+      completed: false,
+      bufferDays: getBufferDays(stakeholderList[1].availability),
+      aiNote: `📅 ${stakeholderList[1].name} prefers Tuesday/Wednesday meetings. ${stakeholderList[1].notes}`,
+    });
+
+    // Sort events by date
+    events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return {
+      events,
+      stats: {
+        totalDuration: Math.ceil((signOffDateObj - new Date(events[0].date)) / (24 * 60 * 60 * 1000)),
+        clientMeetings: events.filter((e) => e.type === 'client-meeting').length,
+        milestones: events.filter((e) => e.type === 'milestone').length,
+        bufferDaysAdded: events.reduce((sum, e) => sum + (e.bufferDays || 0), 0),
+        progressReports: events.filter((e) => e.type === 'progress-report').length,
+      },
+    };
+  };
+
+  const handleGenerateTimeline = () => {
+    if (!signOffDate) {
+      alert('Please select a sign-off date first');
+      return;
+    }
+
+    const generatedTimeline = generateTimeline(signOffDate, plan?.milestones, stakeholders);
+    setTimeline(generatedTimeline);
+  };
+
+  // Helper function for buffer days (used in UI)
+  const getBufferDays = (availability) => {
+    switch (availability) {
+      case 'very-limited':
+        return 6;
+      case 'limited':
+        return 4;
+      case 'moderate':
+        return 2;
+      case 'high':
+        return 1;
+      default:
+        return 2;
     }
   };
 
@@ -1061,19 +1276,351 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
             </div>
           )}
 
-          {/* Step 6: Blockers & Review */}
+          {/* Step 6: AI Timeline Planning */}
           {currentStep === 6 && (
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">🗓️ AI Timeline Planning</h3>
+                  <p className="text-gray-600">
+                    Intelligent scheduling based on stakeholder availability and project milestones
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setTimelineView('timeline')}
+                    className={`px-3 py-1 text-sm rounded ${
+                      timelineView === 'timeline'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Timeline
+                  </button>
+                  <button
+                    onClick={() => setTimelineView('calendar')}
+                    className={`px-3 py-1 text-sm rounded ${
+                      timelineView === 'calendar'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Calendar
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign-off date input */}
+              {!timeline && (
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+                  <h4 className="font-bold text-purple-900 mb-4">Set Target Sign-Off Date</h4>
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Project Sign-Off Date
+                      </label>
+                      <input
+                        type="date"
+                        value={signOffDate}
+                        onChange={(e) => setSignOffDate(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handleGenerateTimeline}
+                      disabled={!signOffDate}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      🤖 Generate Timeline
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Insights Banner */}
+              {timeline && (
+                <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl p-6">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">🤖</span>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-lg mb-2">AI Timeline Generated</h4>
+                      <p className="text-purple-100">
+                        Based on {stakeholders.length} stakeholders with varying availability, I've added{' '}
+                        {timeline.stats.bufferDaysAdded} buffer days to account for response times and
+                        scheduling constraints. The timeline includes {timeline.stats.clientMeetings} client
+                        touchpoints and {timeline.stats.progressReports} progress reports.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Stats Row */}
+              {timeline && (
+                <div className="grid grid-cols-5 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Total Duration</p>
+                    <p className="text-2xl font-bold text-gray-900">{timeline.stats.totalDuration}</p>
+                    <p className="text-xs text-gray-600">days</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Client Meetings</p>
+                    <p className="text-2xl font-bold text-blue-600">{timeline.stats.clientMeetings}</p>
+                    <p className="text-xs text-gray-600">scheduled</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Milestones</p>
+                    <p className="text-2xl font-bold text-purple-600">{timeline.stats.milestones}</p>
+                    <p className="text-xs text-gray-600">checkpoints</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Buffer Days</p>
+                    <p className="text-2xl font-bold text-orange-600">{timeline.stats.bufferDaysAdded}</p>
+                    <p className="text-xs text-gray-600">added</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Sign-Off Date</p>
+                    <p className="text-lg font-bold text-green-600">{timeline.events[timeline.events.length - 1]?.date.split(',')[0]}</p>
+                    <p className="text-xs text-gray-600">{timeline.events[timeline.events.length - 1]?.date.split(',')[1]}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Stakeholder Warnings */}
+              {timeline && (
+                <details className="bg-white border border-gray-200 rounded-lg">
+                  <summary className="p-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50">
+                    📋 Stakeholder Analysis ({stakeholders.length})
+                  </summary>
+                  <div className="p-4 pt-0 grid grid-cols-3 gap-4">
+                    {stakeholders.map((stakeholder) => (
+                      <div
+                        key={stakeholder.id}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+                            {stakeholder.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{stakeholder.name}</p>
+                            <p className="text-xs text-gray-500">{stakeholder.role}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600">Availability:</span>
+                            <span
+                              className={`text-xs font-semibold px-2 py-1 rounded ${
+                                stakeholder.availability === 'high'
+                                  ? 'bg-green-100 text-green-700'
+                                  : stakeholder.availability === 'moderate'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                              }`}
+                            >
+                              {stakeholder.availability}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600">Response Time:</span>
+                            <span className="text-xs font-semibold">{stakeholder.responseTime}h avg</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-2">
+                            ⚠️ +{getBufferDays(stakeholder.availability)} days buffer recommended
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {/* Timeline View */}
+              {timeline && timelineView === 'timeline' && (
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="space-y-6">
+                    {timeline.events.map((event, index) => {
+                      const getEventColor = (type) => {
+                        switch (type) {
+                          case 'milestone':
+                            return 'purple';
+                          case 'client-meeting':
+                            return 'blue';
+                          case 'progress-report':
+                            return 'green';
+                          case 'blocker-review':
+                            return 'red';
+                          case 'internal':
+                            return 'gray';
+                          default:
+                            return 'gray';
+                        }
+                      };
+
+                      const getEventIcon = (type) => {
+                        switch (type) {
+                          case 'milestone':
+                            return '🎯';
+                          case 'client-meeting':
+                            return '👥';
+                          case 'progress-report':
+                            return '📊';
+                          case 'blocker-review':
+                            return '🚨';
+                          case 'internal':
+                            return '🔧';
+                          default:
+                            return '📌';
+                        }
+                      };
+
+                      const color = getEventColor(event.type);
+                      const icon = getEventIcon(event.type);
+                      const isLast = index === timeline.events.length - 1;
+
+                      // Get actual color classes (Tailwind doesn't support dynamic class names)
+                      const getBgClass = (c) => {
+                        const classes = {
+                          purple: 'bg-purple-100 text-purple-600',
+                          blue: 'bg-blue-100 text-blue-600',
+                          green: 'bg-green-100 text-green-600',
+                          red: 'bg-red-100 text-red-600',
+                          gray: 'bg-gray-100 text-gray-600',
+                        };
+                        return classes[c] || classes.gray;
+                      };
+
+                      const getBorderClass = (c) => {
+                        const classes = {
+                          purple: 'border-purple-200 hover:border-purple-400',
+                          blue: 'border-blue-200 hover:border-blue-400',
+                          green: 'border-green-200 hover:border-green-400',
+                          red: 'border-red-200 hover:border-red-400',
+                          gray: 'border-gray-200 hover:border-gray-400',
+                        };
+                        return classes[c] || classes.gray;
+                      };
+
+                      return (
+                        <div key={event.id} className="flex gap-4">
+                          {/* Timeline line */}
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={`w-12 h-12 rounded-full ${getBgClass(color)} flex items-center justify-center text-xl ${
+                                event.isFinal ? 'ring-4 ring-green-200' : ''
+                              }`}
+                            >
+                              {icon}
+                            </div>
+                            {!isLast && (
+                              <div className="w-0.5 flex-1 min-h-[40px] bg-gray-200 mt-2"></div>
+                            )}
+                          </div>
+
+                          {/* Event card */}
+                          <div className="flex-1 pb-6">
+                            <div
+                              className={`bg-white border-2 ${getBorderClass(color)} rounded-lg p-4 transition-all ${
+                                event.isFinal ? 'ring-2 ring-green-300' : ''
+                              }`}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">{event.date}</p>
+                                  <h4 className="font-bold text-gray-900">{event.title}</h4>
+                                  <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  {event.approvalRequired && (
+                                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded font-semibold">
+                                      Approval Required
+                                    </span>
+                                  )}
+                                  {event.isFinal && (
+                                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-semibold">
+                                      🏁 Final
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {event.stakeholder && (
+                                <div className="mt-3 flex items-center gap-2 text-sm text-gray-700 bg-gray-50 rounded p-2">
+                                  <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">
+                                    {event.stakeholder.name.substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <span className="font-medium">{event.stakeholder.name}</span>
+                                  <span className="text-gray-500">·</span>
+                                  <span className="text-xs text-gray-500">{event.stakeholder.role}</span>
+                                </div>
+                              )}
+
+                              {event.aiNote && (
+                                <div className="mt-3 bg-purple-50 border border-purple-200 rounded p-3">
+                                  <p className="text-sm text-purple-900">{event.aiNote}</p>
+                                </div>
+                              )}
+
+                              {event.bufferDays > 0 && (
+                                <div className="mt-3">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
+                                    ⏱️ +{event.bufferDays} buffer days
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Calendar View Placeholder */}
+              {timeline && timelineView === 'calendar' && (
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <p className="text-center text-gray-500 py-12">
+                    Calendar view coming soon...
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              {timeline && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setTimeline(null);
+                      setSignOffDate('');
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200"
+                  >
+                    🔄 Regenerate
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 7: Final Review */}
+          {currentStep === 7 && (
             <div className="max-w-4xl mx-auto space-y-6">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  ⚠️ Potential Blockers
+                  ✅ Final Review & Blockers
                 </h3>
                 <p className="text-gray-600">
-                  Here are some items that need attention before starting
+                  Review potential blockers and finalize your project setup
                 </p>
               </div>
 
-              <div className="space-y-3">
+              {/* Blockers Section */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">⚠️ Potential Blockers</h4>
+                <div className="space-y-3">
                 {blockers?.map((blocker, index) => (
                   <div
                     key={index}
