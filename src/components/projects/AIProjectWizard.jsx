@@ -57,6 +57,15 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
   const [editingDeliverable, setEditingDeliverable] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
 
+  // Tech stack editing state
+  const [editingTechStack, setEditingTechStack] = useState(null);
+  const [techEditForm, setTechEditForm] = useState({
+    category: '',
+    recommended: '',
+    reason: '',
+    alternatives: [],
+  });
+
   const steps = [
     { id: 1, title: 'Basic Info', description: 'Name and description' },
     { id: 2, title: 'Brief', description: 'Project details' },
@@ -202,6 +211,79 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
     } catch (error) {
       console.error('Re-analysis error:', error);
       alert('Failed to re-analyze. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Tech stack editing functions
+  const handleEditTechStack = (index) => {
+    const tech = techStack[index];
+    setTechEditForm({
+      category: tech.category,
+      recommended: tech.recommended,
+      reason: tech.reason,
+      alternatives: tech.alternatives || [],
+    });
+    setEditingTechStack(index);
+  };
+
+  const handleSaveTechStack = () => {
+    if (editingTechStack !== null) {
+      const updatedTechStack = [...techStack];
+      updatedTechStack[editingTechStack] = {
+        category: techEditForm.category,
+        recommended: techEditForm.recommended,
+        reason: techEditForm.reason,
+        alternatives: techEditForm.alternatives,
+      };
+      setTechStack(updatedTechStack);
+      setEditingTechStack(null);
+      setTechEditForm({ category: '', recommended: '', reason: '', alternatives: [] });
+    }
+  };
+
+  const handleCancelTechEdit = () => {
+    setEditingTechStack(null);
+    setTechEditForm({ category: '', recommended: '', reason: '', alternatives: [] });
+  };
+
+  const handleRemoveTechStack = (index) => {
+    const updatedTechStack = techStack.filter((_, i) => i !== index);
+    setTechStack(updatedTechStack);
+  };
+
+  const handleSwitchToAlternative = (techIndex, alternative) => {
+    const updatedTechStack = [...techStack];
+    const currentRecommended = updatedTechStack[techIndex].recommended;
+
+    // Swap: current recommended becomes alternative, alternative becomes recommended
+    updatedTechStack[techIndex].recommended = alternative;
+    const alts = updatedTechStack[techIndex].alternatives || [];
+    const newAlternatives = alts.map((alt) => (alt === alternative ? currentRecommended : alt));
+    updatedTechStack[techIndex].alternatives = newAlternatives;
+
+    setTechStack(updatedTechStack);
+  };
+
+  const handleAddTechStack = () => {
+    const newTech = {
+      category: 'New Category',
+      recommended: 'New Technology',
+      reason: 'Click edit to add reason',
+      alternatives: [],
+    };
+    setTechStack([...techStack, newTech]);
+  };
+
+  const handleRegenerateTechStack = async () => {
+    setLoading(true);
+    try {
+      const result = await aiService.recommendTechStack(basicInfo, brief, analysis.deliverables);
+      setTechStack(result.recommendations);
+    } catch (error) {
+      console.error('Tech stack regeneration error:', error);
+      alert('Failed to regenerate. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -552,49 +634,138 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
           {/* Step 4: Tech Stack Recommendations */}
           {currentStep === 4 && techStack && (
             <div className="max-w-4xl mx-auto space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  🛠️ Tech Stack Recommendations
-                </h3>
-                <p className="text-gray-600">
-                  Based on your requirements, here's what we recommend
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    🛠️ Tech Stack Recommendations
+                  </h3>
+                  <p className="text-gray-600">
+                    Based on your requirements, here's what we recommend
+                  </p>
+                </div>
+                <button
+                  onClick={handleAddTechStack}
+                  className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200"
+                >
+                  + Add Technology
+                </button>
               </div>
 
               <div className="space-y-4">
                 {techStack?.map((recommendation, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
-                          {recommendation.category}
-                        </span>
-                        <h4 className="text-2xl font-bold text-gray-900 mt-1">
-                          {recommendation.recommended}
-                        </h4>
-                        <p className="text-gray-600 mt-2">{recommendation.reason}</p>
-                      </div>
-                      <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium flex-shrink-0 ml-4">
-                        ✓ Use This
-                      </button>
-                    </div>
-
-                    {recommendation.alternatives && recommendation.alternatives.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 mb-2">Alternatives:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {recommendation.alternatives.map((alt, altIndex) => (
+                  <div key={index}>
+                    {editingTechStack === index ? (
+                      // Edit mode
+                      <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Category
+                            </label>
+                            <input
+                              type="text"
+                              value={techEditForm.category}
+                              onChange={(e) =>
+                                setTechEditForm({ ...techEditForm, category: e.target.value })
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              placeholder="e.g., Frontend, Backend, Database"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Technology Name
+                            </label>
+                            <input
+                              type="text"
+                              value={techEditForm.recommended}
+                              onChange={(e) =>
+                                setTechEditForm({ ...techEditForm, recommended: e.target.value })
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-semibold"
+                              placeholder="e.g., React, Node.js, PostgreSQL"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Reason
+                            </label>
+                            <textarea
+                              value={techEditForm.reason}
+                              onChange={(e) =>
+                                setTechEditForm({ ...techEditForm, reason: e.target.value })
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              rows={2}
+                              placeholder="Why this technology is recommended"
+                            />
+                          </div>
+                          <div className="flex gap-2">
                             <button
-                              key={altIndex}
-                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-purple-100 hover:text-purple-700 transition-colors"
+                              onClick={handleSaveTechStack}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
                             >
-                              {alt}
+                              ✓ Save
                             </button>
-                          ))}
+                            <button
+                              onClick={handleCancelTechEdit}
+                              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
+                      </div>
+                    ) : (
+                      // View mode
+                      <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
+                              {recommendation.category}
+                            </span>
+                            <h4 className="text-2xl font-bold text-gray-900 mt-1">
+                              {recommendation.recommended}
+                            </h4>
+                            <p className="text-gray-600 mt-2">{recommendation.reason}</p>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0 ml-4">
+                            <button
+                              onClick={() => handleEditTechStack(index)}
+                              className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                              title="Edit"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleRemoveTechStack(index)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              title="Remove"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+
+                        {recommendation.alternatives && recommendation.alternatives.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-xs font-medium text-gray-500 mb-2">
+                              Alternatives (click to switch):
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {recommendation.alternatives.map((alt, altIndex) => (
+                                <button
+                                  key={altIndex}
+                                  onClick={() => handleSwitchToAlternative(index, alt)}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-purple-600 hover:text-white transition-colors"
+                                  title={`Switch to ${alt}`}
+                                >
+                                  {alt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -602,10 +773,10 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
               </div>
 
               <div className="flex gap-3">
-                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                  ✓ Approve Recommendations
-                </button>
-                <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200">
+                <button
+                  onClick={handleRegenerateTechStack}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200"
+                >
                   🔄 Regenerate
                 </button>
               </div>
