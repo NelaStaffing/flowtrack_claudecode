@@ -66,6 +66,11 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
     alternatives: [],
   });
 
+  // Milestone editing state
+  const [editingMilestone, setEditingMilestone] = useState(null);
+  const [milestoneEditForm, setMilestoneEditForm] = useState({ name: '' });
+  const [expandedMilestones, setExpandedMilestones] = useState([0]); // First milestone expanded by default
+
   const steps = [
     { id: 1, title: 'Basic Info', description: 'Name and description' },
     { id: 2, title: 'Brief', description: 'Project details' },
@@ -283,6 +288,105 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
       setTechStack(result.recommendations);
     } catch (error) {
       console.error('Tech stack regeneration error:', error);
+      alert('Failed to regenerate. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Milestone editing functions
+  const toggleMilestone = (index) => {
+    if (expandedMilestones.includes(index)) {
+      setExpandedMilestones(expandedMilestones.filter((i) => i !== index));
+    } else {
+      setExpandedMilestones([...expandedMilestones, index]);
+    }
+  };
+
+  const handleEditMilestone = (index) => {
+    const milestone = plan.milestones[index];
+    setMilestoneEditForm({ name: milestone.name });
+    setEditingMilestone(index);
+  };
+
+  const handleSaveMilestone = () => {
+    if (editingMilestone !== null) {
+      const updatedMilestones = [...plan.milestones];
+      updatedMilestones[editingMilestone].name = milestoneEditForm.name;
+      setPlan({ ...plan, milestones: updatedMilestones });
+      setEditingMilestone(null);
+      setMilestoneEditForm({ name: '' });
+    }
+  };
+
+  const handleCancelMilestoneEdit = () => {
+    setEditingMilestone(null);
+    setMilestoneEditForm({ name: '' });
+  };
+
+  const handleToggleTask = (milestoneIndex, taskIndex) => {
+    const updatedMilestones = [...plan.milestones];
+    const tasks = updatedMilestones[milestoneIndex].tasks;
+
+    // Toggle task completion (add/remove checkmark)
+    if (!updatedMilestones[milestoneIndex].completedTasks) {
+      updatedMilestones[milestoneIndex].completedTasks = [];
+    }
+
+    const completedTasks = updatedMilestones[milestoneIndex].completedTasks;
+    if (completedTasks.includes(taskIndex)) {
+      updatedMilestones[milestoneIndex].completedTasks = completedTasks.filter(
+        (i) => i !== taskIndex
+      );
+    } else {
+      updatedMilestones[milestoneIndex].completedTasks.push(taskIndex);
+    }
+
+    setPlan({ ...plan, milestones: updatedMilestones });
+  };
+
+  const handleAddTask = (milestoneIndex) => {
+    const updatedMilestones = [...plan.milestones];
+    updatedMilestones[milestoneIndex].tasks.push('New task - click to edit');
+    setPlan({ ...plan, milestones: updatedMilestones });
+  };
+
+  const handleRemoveTask = (milestoneIndex, taskIndex) => {
+    const updatedMilestones = [...plan.milestones];
+    updatedMilestones[milestoneIndex].tasks = updatedMilestones[milestoneIndex].tasks.filter(
+      (_, i) => i !== taskIndex
+    );
+    setPlan({ ...plan, milestones: updatedMilestones });
+  };
+
+  const handleRemoveMilestone = (index) => {
+    const updatedMilestones = plan.milestones.filter((_, i) => i !== index);
+    setPlan({ ...plan, milestones: updatedMilestones });
+  };
+
+  const handleAddMilestone = () => {
+    const newMilestone = {
+      name: 'New Milestone',
+      tasks: ['Task 1', 'Task 2', 'Task 3'],
+      confidence: 80,
+      daysFromStart: 30,
+      completedTasks: [],
+    };
+    setPlan({ ...plan, milestones: [...plan.milestones, newMilestone] });
+  };
+
+  const handleRegeneratePlan = async () => {
+    setLoading(true);
+    try {
+      const result = await aiService.generateProjectPlan(
+        basicInfo,
+        brief,
+        analysis.deliverables,
+        techStack
+      );
+      setPlan(result);
+    } catch (error) {
+      console.error('Plan regeneration error:', error);
       alert('Failed to regenerate. Please try again.');
     } finally {
       setLoading(false);
@@ -786,95 +890,171 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
           {/* Step 5: AI-Generated Plan */}
           {currentStep === 5 && plan && (
             <div className="max-w-4xl mx-auto space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">📋 Project Plan</h3>
-                <p className="text-gray-600">
-                  AI-generated milestones and timeline for your project
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">📋 Project Plan</h3>
+                  <p className="text-gray-600">AI-generated milestones and tasks</p>
+                </div>
+                <button
+                  onClick={handleAddMilestone}
+                  className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200"
+                >
+                  + Add Milestone
+                </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {plan?.milestones?.map((milestone, index) => {
-                  const isFirst = index === 0;
-                  const isLast = index === plan.milestones.length - 1;
+                  const isExpanded = expandedMilestones.includes(index);
+                  const completedCount = milestone.completedTasks?.length || 0;
+                  const totalTasks = milestone.tasks?.length || 0;
 
                   return (
                     <div
                       key={index}
-                      className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all"
+                      className="bg-white border border-gray-200 rounded-lg hover:border-purple-300 transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="flex flex-col items-center">
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                                isFirst
-                                  ? 'bg-green-500 text-white'
-                                  : 'bg-purple-100 text-purple-600'
-                              }`}
+                      {editingMilestone === index ? (
+                        // Edit milestone name mode
+                        <div className="p-4 bg-purple-50 border-2 border-purple-300 rounded-lg">
+                          <input
+                            type="text"
+                            value={milestoneEditForm.name}
+                            onChange={(e) =>
+                              setMilestoneEditForm({ ...milestoneEditForm, name: e.target.value })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg font-semibold mb-3"
+                            placeholder="Milestone name"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveMilestone}
+                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
                             >
-                              {index + 1}
-                            </div>
-                            {!isLast && (
-                              <div className="w-0.5 h-16 bg-gray-200 mt-2"></div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-xl font-bold text-gray-900">
-                              {milestone.name}
-                            </h4>
-                            <p className="text-sm text-gray-500 mt-1">
-                              Day {milestone.daysFromStart} from project start
-                            </p>
-                            <div className="mt-3">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs font-medium text-gray-600">
-                                  Confidence:
-                                </span>
-                                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-xs">
-                                  <div
-                                    className={`h-full rounded-full ${
-                                      milestone.confidence >= 80
-                                        ? 'bg-green-500'
-                                        : milestone.confidence >= 60
-                                        ? 'bg-yellow-500'
-                                        : 'bg-orange-500'
-                                    }`}
-                                    style={{ width: `${milestone.confidence}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm font-semibold text-gray-700">
-                                  {milestone.confidence}%
-                                </span>
-                              </div>
-                            </div>
-                            <ul className="mt-4 space-y-2">
-                              {milestone.tasks?.map((task, taskIndex) => (
-                                <li
-                                  key={taskIndex}
-                                  className="flex items-start gap-2 text-sm text-gray-700"
-                                >
-                                  <span className="text-purple-500 mt-0.5">▸</span>
-                                  <span>{task}</span>
-                                </li>
-                              ))}
-                            </ul>
+                              ✓ Save
+                            </button>
+                            <button
+                              onClick={handleCancelMilestoneEdit}
+                              className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <>
+                          {/* Milestone header */}
+                          <div className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+                                  {index + 1}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-gray-900">{milestone.name}</h4>
+                                  <p className="text-xs text-gray-500">
+                                    {totalTasks} tasks · {completedCount} completed
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {/* Confidence badge */}
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full ${
+                                        milestone.confidence >= 80
+                                          ? 'bg-green-500'
+                                          : milestone.confidence >= 60
+                                          ? 'bg-yellow-500'
+                                          : 'bg-red-500'
+                                      }`}
+                                      style={{ width: `${milestone.confidence}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-600">
+                                    {milestone.confidence}%
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => handleEditMilestone(index)}
+                                  className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                                  title="Edit milestone name"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveMilestone(index)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                  title="Remove milestone"
+                                >
+                                  🗑️
+                                </button>
+                                <button
+                                  onClick={() => toggleMilestone(index)}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                                  title={isExpanded ? 'Collapse' : 'Expand'}
+                                >
+                                  {isExpanded ? '▲' : '▼'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expanded tasks */}
+                          {isExpanded && (
+                            <div className="px-4 pb-4 pt-0 border-t border-gray-100">
+                              <div className="space-y-2 mt-3">
+                                {milestone.tasks?.map((task, taskIndex) => (
+                                  <div
+                                    key={taskIndex}
+                                    className="flex items-center gap-2 group hover:bg-gray-50 rounded px-2 py-1"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={milestone.completedTasks?.includes(taskIndex) || false}
+                                      onChange={() => handleToggleTask(index, taskIndex)}
+                                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+                                    <span
+                                      className={`flex-1 text-sm ${
+                                        milestone.completedTasks?.includes(taskIndex)
+                                          ? 'line-through text-gray-400'
+                                          : 'text-gray-700'
+                                      }`}
+                                    >
+                                      {task}
+                                    </span>
+                                    <button
+                                      onClick={() => handleRemoveTask(index, taskIndex)}
+                                      className="opacity-0 group-hover:opacity-100 p-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                                      title="Remove task"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => handleAddTask(index)}
+                                className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-medium"
+                              >
+                                + Add Task
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
               <div className="flex gap-3">
-                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                  ✓ Approve Plan
-                </button>
-                <button className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200">
-                  ✏️ Adjust
-                </button>
-                <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200">
+                <button
+                  onClick={handleRegeneratePlan}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200"
+                >
                   🔄 Regenerate
                 </button>
               </div>
