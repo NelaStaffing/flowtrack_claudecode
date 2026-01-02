@@ -1679,8 +1679,9 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
                   </div>
                 ))}
               </div>
+            </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200 mt-8">
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200 mt-8">
                 <h4 className="font-bold text-gray-900 mb-4">📊 Project Summary</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
