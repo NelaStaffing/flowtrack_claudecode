@@ -75,6 +75,9 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
   const [timeline, setTimeline] = useState(null);
   const [timelineView, setTimelineView] = useState('timeline'); // 'timeline' | 'calendar' | 'gantt'
   const [signOffDate, setSignOffDate] = useState('');
+
+  // Blocker resolution state
+  const [resolvedBlockers, setResolvedBlockers] = useState([]);
   const [stakeholders, setStakeholders] = useState([
     {
       id: '1',
@@ -606,6 +609,18 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
       default:
         return 2;
     }
+  };
+
+  // Blocker resolution handlers
+  const handleResolveBlocker = (index) => {
+    if (!resolvedBlockers.includes(index)) {
+      setResolvedBlockers([...resolvedBlockers, index]);
+    }
+  };
+
+  const handleLaterBlocker = (index) => {
+    // Remove from resolved if it was marked as resolved
+    setResolvedBlockers(resolvedBlockers.filter((i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -1610,109 +1625,223 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
             <div className="max-w-4xl mx-auto space-y-6">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  ✅ Final Review & Blockers
+                  Project Review & Launch
                 </h3>
                 <p className="text-gray-600">
-                  Review potential blockers and finalize your project setup
+                  Final review before creating your project
                 </p>
               </div>
 
-              {/* Blockers Section */}
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">⚠️ Potential Blockers</h4>
-                <div className="space-y-3">
-                {blockers?.map((blocker, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border-l-4 rounded-lg p-4 flex items-start gap-4"
-                    style={{
-                      borderLeftColor:
-                        blocker.severity === 'high'
-                          ? '#EF4444'
-                          : blocker.severity === 'medium'
-                          ? '#F59E0B'
-                          : '#6B7280',
-                    }}
-                  >
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        blocker.severity === 'high'
-                          ? 'bg-red-100 text-red-600'
-                          : blocker.severity === 'medium'
-                          ? 'bg-yellow-100 text-yellow-600'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {blocker.severity === 'high'
-                        ? '🔴'
-                        : blocker.severity === 'medium'
-                        ? '🟡'
-                        : '⚪'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{blocker.title}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{blocker.description}</p>
-                        </div>
-                        <span
-                          className={`text-xs font-bold uppercase px-2 py-1 rounded ${
-                            blocker.severity === 'high'
-                              ? 'bg-red-100 text-red-700'
-                              : blocker.severity === 'medium'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {blocker.severity}
-                        </span>
-                      </div>
-                      <div className="flex gap-2 mt-3">
-                        <button className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 font-medium">
-                          📌 Decide Now
-                        </button>
-                        <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200 font-medium">
-                          ✓ Create Task
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200 mt-8">
-                <h4 className="font-bold text-gray-900 mb-4">📊 Project Summary</h4>
-                <div className="grid grid-cols-2 gap-4">
+              {/* Project Summary Card */}
+              <div className="bg-gradient-to-br from-purple-50 via-purple-50 to-blue-50 rounded-xl p-6 border border-purple-100">
+                <div className="flex items-start justify-between mb-6">
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Project Name</p>
-                    <p className="font-semibold text-gray-900">{basicInfo.name}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                      {basicInfo.name}
+                    </h2>
+                    {basicInfo.client && (
+                      <p className="text-gray-600">Client: {basicInfo.client}</p>
+                    )}
                   </div>
-                  {basicInfo.client && (
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Client</p>
-                      <p className="font-semibold text-gray-900">{basicInfo.client}</p>
+                  {timeline && (
+                    <div className="text-right">
+                      <p className="text-xs text-gray-600 mb-1">Target Date</p>
+                      <p className="text-xl font-bold text-purple-600">
+                        {new Date(signOffDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
                     </div>
                   )}
+                </div>
+
+                {/* Stats Grid */}
+                {timeline && (
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-1">📅</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {timeline.stats.totalDuration}
+                      </div>
+                      <div className="text-xs text-gray-600">Duration</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-1">🎯</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {timeline.stats.milestones}
+                      </div>
+                      <div className="text-xs text-gray-600">Milestones</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-1">👥</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {timeline.stats.clientMeetings}
+                      </div>
+                      <div className="text-xs text-gray-600">Client Meetings</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-1">🛡️</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {timeline.stats.bufferDaysAdded}
+                      </div>
+                      <div className="text-xs text-gray-600">Buffer Days</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tech Stack */}
+                {techStack && techStack.length > 0 && (
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Deliverables</p>
-                    <p className="font-semibold text-gray-900">
-                      {analysis?.deliverables?.length || 0} items
+                    <p className="text-xs text-gray-600 mb-2">Tech Stack</p>
+                    <div className="flex flex-wrap gap-2">
+                      {techStack.map((tech, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-white text-gray-700 rounded-lg text-sm font-medium border border-gray-200"
+                        >
+                          {tech.recommended}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Blockers Section */}
+              {blockers && blockers.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-yellow-600 text-xl">⚠️</span>
+                    <h4 className="font-semibold text-gray-900">
+                      Open Blockers & Items ({blockers.length - resolvedBlockers.length} remaining)
+                    </h4>
+                  </div>
+
+                  <div className="space-y-3">
+                    {blockers.map((blocker, index) => {
+                      const isResolved = resolvedBlockers.includes(index);
+                      const bgColor = blocker.severity === 'high'
+                        ? 'bg-red-50'
+                        : blocker.severity === 'medium'
+                        ? 'bg-yellow-50'
+                        : 'bg-gray-50';
+                      const iconColor = blocker.severity === 'high'
+                        ? 'text-red-600'
+                        : blocker.severity === 'medium'
+                        ? 'text-yellow-600'
+                        : 'text-gray-600';
+                      const icon = blocker.severity === 'high' ? '🔺' : '⚠️';
+
+                      return (
+                        <div
+                          key={index}
+                          className={`${bgColor} ${
+                            isResolved ? 'opacity-50' : ''
+                          } rounded-lg p-4 border ${
+                            blocker.severity === 'high'
+                              ? 'border-red-200'
+                              : blocker.severity === 'medium'
+                              ? 'border-yellow-200'
+                              : 'border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`text-xl ${iconColor} flex-shrink-0`}>
+                              {icon}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <h5 className="font-semibold text-gray-900">
+                                    {blocker.title}
+                                  </h5>
+                                  <p className="text-sm text-gray-600 italic mt-1">
+                                    "{blocker.description}"
+                                  </p>
+                                </div>
+                                <span
+                                  className={`ml-3 text-xs font-bold uppercase px-2 py-1 rounded ${
+                                    blocker.severity === 'high'
+                                      ? 'bg-red-100 text-red-700'
+                                      : blocker.severity === 'medium'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  {blocker.severity}
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleResolveBlocker(index)}
+                                  disabled={isResolved}
+                                  className={`px-4 py-1.5 ${
+                                    isResolved
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-green-600 text-white hover:bg-green-700'
+                                  } rounded text-sm font-medium transition-colors disabled:cursor-not-allowed`}
+                                >
+                                  {isResolved ? '✓ Resolved' : 'Resolve'}
+                                </button>
+                                <button
+                                  onClick={() => handleLaterBlocker(index)}
+                                  className="px-4 py-1.5 bg-white text-gray-700 rounded text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                                >
+                                  Later
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Progress Indicator */}
+                  <div className="flex items-center justify-between mt-4 text-sm">
+                    <span className="text-gray-600 font-medium">
+                      {resolvedBlockers.length} of {blockers.length} resolved
+                    </span>
+                    <span className="text-gray-500">
+                      Remaining items will become tasks
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Ready to Launch Card */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">🎉</div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 mb-2">Ready to Launch!</h4>
+                    <p className="text-gray-700 mb-3">
+                      Your project is configured with{' '}
+                      <span className="font-semibold">{plan?.milestones?.length || 0} milestones</span>
+                      {timeline && (
+                        <>
+                          , <span className="font-semibold">{timeline.stats.clientMeetings} scheduled client touchpoints</span>
+                          , and{' '}
+                          <span className="font-semibold">{timeline.stats.bufferDaysAdded} buffer days</span> for
+                          stakeholder response times
+                        </>
+                      )}
+                      .
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Technologies</p>
-                    <p className="font-semibold text-gray-900">{techStack?.length || 0} tools</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Milestones</p>
-                    <p className="font-semibold text-gray-900">
-                      {plan?.milestones?.length || 0} phases
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Blockers</p>
-                    <p className="font-semibold text-gray-900">{blockers?.length || 0} items</p>
+                    {timeline && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Estimated Completion</span>
+                        <span className="text-lg font-bold text-green-700">
+                          {new Date(signOffDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1736,7 +1865,7 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
             >
               Cancel
             </button>
-            {currentStep < 6 ? (
+            {currentStep < 7 ? (
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
