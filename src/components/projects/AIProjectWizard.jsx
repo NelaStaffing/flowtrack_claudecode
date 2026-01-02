@@ -53,6 +53,10 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
   const [plan, setPlan] = useState(null);
   const [blockers, setBlockers] = useState([]);
 
+  // Editing state
+  const [editingDeliverable, setEditingDeliverable] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '' });
+
   const steps = [
     { id: 1, title: 'Basic Info', description: 'Name and description' },
     { id: 2, title: 'Brief', description: 'Project details' },
@@ -146,6 +150,60 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Deliverable editing functions
+  const handleEditDeliverable = (index) => {
+    const deliverable = analysis.deliverables[index];
+    setEditForm({ title: deliverable.title, description: deliverable.description });
+    setEditingDeliverable(index);
+  };
+
+  const handleSaveDeliverable = () => {
+    if (editingDeliverable !== null) {
+      const updatedDeliverables = [...analysis.deliverables];
+      updatedDeliverables[editingDeliverable] = {
+        title: editForm.title,
+        description: editForm.description,
+      };
+      setAnalysis({ ...analysis, deliverables: updatedDeliverables });
+      setEditingDeliverable(null);
+      setEditForm({ title: '', description: '' });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDeliverable(null);
+    setEditForm({ title: '', description: '' });
+  };
+
+  const handleRemoveDeliverable = (index) => {
+    const updatedDeliverables = analysis.deliverables.filter((_, i) => i !== index);
+    setAnalysis({ ...analysis, deliverables: updatedDeliverables });
+  };
+
+  const handleAddDeliverable = () => {
+    const newDeliverable = {
+      title: 'New Deliverable',
+      description: 'Click edit to add description',
+    };
+    setAnalysis({
+      ...analysis,
+      deliverables: [...analysis.deliverables, newDeliverable],
+    });
+  };
+
+  const handleReanalyze = async () => {
+    setLoading(true);
+    try {
+      const result = await aiService.analyzeProjectBrief(basicInfo, brief);
+      setAnalysis(result);
+    } catch (error) {
+      console.error('Re-analysis error:', error);
+      alert('Failed to re-analyze. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -399,36 +457,92 @@ export default function AIProjectWizard({ onClose, onComplete, userId }) {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Core Deliverables</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-gray-900">Core Deliverables</h4>
+                  <button
+                    onClick={handleAddDeliverable}
+                    className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200"
+                  >
+                    + Add Deliverable
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {analysis?.deliverables?.map((deliverable, index) => (
-                    <div
-                      key={index}
-                      className="flex gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-purple-300 transition-colors"
-                    >
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold">
-                        ✓
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="font-semibold text-gray-900">{deliverable.title}</h5>
-                        <p className="text-sm text-gray-600 mt-1">{deliverable.description}</p>
-                      </div>
-                      <button className="text-gray-400 hover:text-purple-600">
-                        <span className="text-lg">✏️</span>
-                      </button>
+                    <div key={index}>
+                      {editingDeliverable === index ? (
+                        // Edit mode
+                        <div className="p-4 bg-purple-50 border-2 border-purple-300 rounded-lg">
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3 font-semibold"
+                            placeholder="Deliverable title"
+                          />
+                          <textarea
+                            value={editForm.description}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, description: e.target.value })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3 text-sm"
+                            rows={2}
+                            placeholder="Deliverable description"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveDeliverable}
+                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                            >
+                              ✓ Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // View mode
+                        <div className="flex gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-purple-300 transition-colors">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold">
+                            ✓
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-semibold text-gray-900">{deliverable.title}</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {deliverable.description}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleEditDeliverable(index)}
+                              className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                              title="Edit"
+                            >
+                              <span className="text-lg">✏️</span>
+                            </button>
+                            <button
+                              onClick={() => handleRemoveDeliverable(index)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              title="Remove"
+                            >
+                              <span className="text-lg">🗑️</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                  ✓ Looks Right
-                </button>
-                <button className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium border border-purple-200">
-                  ✏️ Edit
-                </button>
-                <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200">
+                <button
+                  onClick={handleReanalyze}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium border border-gray-200"
+                >
                   🔄 Re-analyze
                 </button>
               </div>
