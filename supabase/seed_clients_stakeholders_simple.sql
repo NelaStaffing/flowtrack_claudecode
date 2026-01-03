@@ -1,0 +1,237 @@
+-- ============================================================
+-- SIMPLE SEED DATA FOR CLIENTS & STAKEHOLDERS
+-- Run each section separately in Supabase SQL Editor
+-- ============================================================
+
+-- ============================================================
+-- STEP 1: INSERT CLIENTS (run this first)
+-- ============================================================
+
+-- Acme Corporation
+INSERT INTO clients (
+  id, created_by, name, logo, logo_color, industry, website, status,
+  address_street, address_city, address_state, address_zip,
+  billing_type, billing_currency, tax_id, tags, notes,
+  total_revenue, total_projects, active_projects, health_score,
+  client_since
+) VALUES (
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  auth.uid(),
+  'Acme Corporation', '🏢', '#7C3AED', 'Technology', 'https://acme.example.com', 'active',
+  '123 Tech Street', 'San Francisco', 'CA', '94105',
+  'Net 30', 'USD', 'TAX-123456',
+  ARRAY['Enterprise', 'Tech', 'Priority'],
+  'Major enterprise client with ongoing projects',
+  45000, 3, 1, 92,
+  '2024-01-15'
+);
+
+-- TechStart Inc.
+INSERT INTO clients (
+  id, created_by, name, logo, logo_color, industry, website, status,
+  address_city, address_state,
+  billing_type, billing_currency, tags,
+  total_revenue, total_projects, active_projects, health_score,
+  client_since
+) VALUES (
+  '22222222-2222-2222-2222-222222222222'::uuid,
+  auth.uid(),
+  'TechStart Inc.', '🚀', '#10B981', 'SaaS', 'https://techstart.io', 'active',
+  'Austin', 'TX',
+  'Net 15', 'USD',
+  ARRAY['Startup', 'Priority'],
+  28000, 2, 1, 85,
+  '2024-03-20'
+);
+
+-- Global Retail Co.
+INSERT INTO clients (
+  id, created_by, name, logo, logo_color, industry, website, status,
+  address_street, address_city, address_state, address_zip,
+  billing_type, billing_currency, tags,
+  total_revenue, total_projects, active_projects, health_score,
+  client_since
+) VALUES (
+  '33333333-3333-3333-3333-333333333333'::uuid,
+  auth.uid(),
+  'Global Retail Co.', '🛒', '#F59E0B', 'E-commerce', 'https://globalretail.com', 'active',
+  '456 Commerce Ave', 'New York', 'NY', '10001',
+  'Net 45', 'USD',
+  ARRAY['Enterprise', 'Long-term'],
+  82000, 5, 2, 78,
+  '2023-11-10'
+);
+
+-- HealthPlus Medical
+INSERT INTO clients (
+  id, created_by, name, logo, logo_color, industry, website, status,
+  address_city, address_state,
+  billing_type, billing_currency, tags,
+  total_revenue, total_projects, active_projects, health_score,
+  client_since
+) VALUES (
+  '44444444-4444-4444-4444-444444444444'::uuid,
+  auth.uid(),
+  'HealthPlus Medical', '🏥', '#EC4899', 'Healthcare', 'https://healthplus.medical', 'inactive',
+  'Boston', 'MA',
+  'Net 60', 'USD',
+  ARRAY['Healthcare'],
+  35000, 2, 0, 65,
+  '2023-08-05'
+);
+
+-- ============================================================
+-- STEP 2: INSERT CLIENT CONTACTS (run after clients)
+-- ============================================================
+
+INSERT INTO client_contacts (client_id, full_name, job_title, email, phone, is_primary) VALUES
+('11111111-1111-1111-1111-111111111111'::uuid, 'John Smith', 'CTO', 'john.smith@acme.example.com', '+1 (555) 123-4567', TRUE),
+('22222222-2222-2222-2222-222222222222'::uuid, 'Emily Davis', 'CEO', 'emily@techstart.io', '+1 (555) 234-5678', TRUE),
+('33333333-3333-3333-3333-333333333333'::uuid, 'Maria Garcia', 'Digital Director', 'maria.garcia@globalretail.com', '+1 (555) 345-6789', TRUE),
+('44444444-4444-4444-4444-444444444444'::uuid, 'Dr. James Wilson', 'CMO', 'j.wilson@healthplus.medical', '+1 (555) 456-7890', TRUE);
+
+-- ============================================================
+-- STEP 3: INSERT STAKEHOLDERS (run after clients)
+-- ============================================================
+
+-- John Smith (Acme - CTO)
+INSERT INTO stakeholders (
+  created_by, client_id, full_name, avatar_color, job_title, email, phone, timezone,
+  preferred_contact, communication_style, best_time_to_reach,
+  response_time, avg_response_hours,
+  availability, availability_notes, busy_days, preferred_meeting_days, meeting_preference,
+  decision_authority, approval_required, approval_areas,
+  working_style, tags, notes, important_notes,
+  total_interactions, meetings_held, avg_meeting_rating, last_interaction_at
+) VALUES (
+  auth.uid(),
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  'John Smith', '#7C3AED', 'CTO', 'john.smith@acme.example.com', '+1 (555) 123-4567', 'PST (UTC-8)',
+  'slack', 'direct', '10am - 4pm PST',
+  'fast', 1.5,
+  'high', 'Very responsive on Slack. Avoid Mondays (all-day meetings)',
+  ARRAY['Monday'], ARRAY['Tuesday', 'Wednesday', 'Thursday'], '30min',
+  'high', TRUE, ARRAY['Technical decisions', 'Architecture', 'Budget over $10k'],
+  '{"needsContext": false, "prefersAsync": true, "detailOriented": false, "quickDecisions": true}',
+  ARRAY['Quick decisions', 'Prefers async', 'Detail oriented'],
+  'Prefers Slack threads over email. Always come prepared with options, not problems.',
+  ARRAY['Always come prepared with options, not just problems', 'Prefers Slack threads over email chains', 'Book meetings at least 2 days in advance'],
+  47, 12, 4.5, NOW() - INTERVAL '2 hours'
+);
+
+-- Sarah Johnson (Acme - PM)
+INSERT INTO stakeholders (
+  created_by, client_id, full_name, avatar_color, job_title, email, phone, timezone,
+  preferred_contact, communication_style, best_time_to_reach,
+  response_time, avg_response_hours,
+  availability, busy_days, preferred_meeting_days, meeting_preference,
+  decision_authority, working_style, tags,
+  total_interactions, meetings_held, avg_meeting_rating, last_interaction_at
+) VALUES (
+  auth.uid(),
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  'Sarah Johnson', '#3B82F6', 'Project Manager', 'sarah.j@acme.example.com', '+1 (555) 123-4568', 'EST (UTC-5)',
+  'email', 'detailed', '9am - 5pm EST',
+  'moderate', 8,
+  'moderate', ARRAY['Friday'], ARRAY['Monday', 'Tuesday', 'Wednesday'], '45min',
+  'medium',
+  '{"needsContext": true, "prefersAsync": false, "detailOriented": true, "quickDecisions": false}',
+  ARRAY['Needs context', 'Detail oriented'],
+  35, 8, 4.2, NOW() - INTERVAL '1 day'
+);
+
+-- Emily Davis (TechStart - CEO)
+INSERT INTO stakeholders (
+  created_by, client_id, full_name, avatar_color, job_title, email, phone, timezone,
+  preferred_contact, communication_style, best_time_to_reach,
+  response_time, avg_response_hours,
+  availability, availability_notes, busy_days, preferred_meeting_days, meeting_preference,
+  decision_authority, approval_required, working_style, tags,
+  total_interactions, meetings_held, avg_meeting_rating, last_interaction_at
+) VALUES (
+  auth.uid(),
+  '22222222-2222-2222-2222-222222222222'::uuid,
+  'Emily Davis', '#10B981', 'CEO', 'emily@techstart.io', '+1 (555) 234-5678', 'CST (UTC-6)',
+  'video', 'direct', '2pm - 6pm CST',
+  'fast', 2,
+  'limited', 'Very busy, prefers video calls for important decisions',
+  ARRAY['Monday', 'Friday'], ARRAY['Tuesday', 'Thursday'], '30min',
+  'high', TRUE,
+  '{"needsContext": false, "prefersAsync": false, "detailOriented": false, "quickDecisions": true}',
+  ARRAY['Quick decisions', 'Visual learner'],
+  23, 15, 4.8, NOW() - INTERVAL '3 hours'
+);
+
+-- Maria Garcia (Global Retail - Digital Director)
+INSERT INTO stakeholders (
+  created_by, client_id, full_name, avatar_color, job_title, email, phone, timezone,
+  preferred_contact, communication_style, best_time_to_reach,
+  response_time, avg_response_hours,
+  availability, availability_notes, busy_days, preferred_meeting_days, meeting_preference,
+  decision_authority, working_style, tags, important_notes,
+  total_interactions, meetings_held, avg_meeting_rating, last_interaction_at
+) VALUES (
+  auth.uid(),
+  '33333333-3333-3333-3333-333333333333'::uuid,
+  'Maria Garcia', '#F59E0B', 'Digital Director', 'maria.garcia@globalretail.com', '+1 (555) 345-6789', 'EST (UTC-5)',
+  'email', 'formal', 'Afternoons only',
+  'slow', 36,
+  'very-limited', 'Very limited availability. Requires formal communication.',
+  ARRAY['Monday', 'Tuesday', 'Friday'], ARRAY['Wednesday'], '1hour',
+  'medium',
+  '{"needsContext": true, "prefersAsync": true, "detailOriented": true, "quickDecisions": false}',
+  ARRAY['Formal communication', 'Needs context'],
+  ARRAY['Requires formal email communication only', 'CC her assistant on all correspondence', 'Needs 1 week notice for meetings'],
+  28, 6, 3.8, NOW() - INTERVAL '2 days'
+);
+
+-- Mike Chen (Acme - Engineering Lead)
+INSERT INTO stakeholders (
+  created_by, client_id, full_name, avatar_color, job_title, email, phone, timezone,
+  preferred_contact, communication_style, best_time_to_reach,
+  response_time, avg_response_hours,
+  availability, preferred_meeting_days, meeting_preference,
+  decision_authority, working_style, tags,
+  total_interactions, meetings_held, avg_meeting_rating, last_interaction_at
+) VALUES (
+  auth.uid(),
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  'Mike Chen', '#06B6D4', 'Engineering Lead', 'mike.chen@acme.example.com', '+1 (555) 123-4569', 'PST (UTC-8)',
+  'slack', 'direct', 'Anytime',
+  'fast', 0.5,
+  'high', ARRAY['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], '15min',
+  'low',
+  '{"needsContext": false, "prefersAsync": true, "detailOriented": false, "quickDecisions": true}',
+  ARRAY['Quick decisions', 'Technical expert'],
+  62, 18, 4.6, NOW() - INTERVAL '30 minutes'
+);
+
+-- ============================================================
+-- STEP 4: INSERT SAMPLE INTERACTIONS (run last)
+-- ============================================================
+
+-- Sample interactions for John Smith
+INSERT INTO stakeholder_interactions (stakeholder_id, interaction_type, title, duration_minutes, rating, interaction_date, user_id)
+SELECT s.id, 'meeting', 'Requirements Review Call', 30, 5, NOW() - INTERVAL '2 hours', auth.uid()
+FROM stakeholders s WHERE s.email = 'john.smith@acme.example.com';
+
+INSERT INTO stakeholder_interactions (stakeholder_id, interaction_type, title, interaction_date, user_id)
+SELECT s.id, 'email', 'Follow-up on timeline changes', NOW() - INTERVAL '1 day', auth.uid()
+FROM stakeholders s WHERE s.email = 'john.smith@acme.example.com';
+
+INSERT INTO stakeholder_interactions (stakeholder_id, interaction_type, title, interaction_date, user_id)
+SELECT s.id, 'slack', 'Quick question about API specs', NOW() - INTERVAL '2 days', auth.uid()
+FROM stakeholders s WHERE s.email = 'john.smith@acme.example.com';
+
+INSERT INTO stakeholder_interactions (stakeholder_id, interaction_type, title, duration_minutes, rating, interaction_date, user_id)
+SELECT s.id, 'meeting', 'Sprint Planning', 45, 4, NOW() - INTERVAL '1 week', auth.uid()
+FROM stakeholders s WHERE s.email = 'john.smith@acme.example.com';
+
+-- ============================================================
+-- VERIFICATION QUERIES
+-- ============================================================
+-- Run these to verify your data:
+-- SELECT * FROM clients ORDER BY name;
+-- SELECT * FROM client_contacts;
+-- SELECT * FROM stakeholders ORDER BY full_name;
+-- SELECT * FROM stakeholder_interactions ORDER BY interaction_date DESC;
