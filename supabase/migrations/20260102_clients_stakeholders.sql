@@ -10,7 +10,7 @@
 
 CREATE TABLE IF NOT EXISTS clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL,
+  created_by UUID REFERENCES auth.users,
 
   -- Basic Info
   name VARCHAR(255) NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_clients_org_id ON clients(org_id);
 CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
+CREATE INDEX IF NOT EXISTS idx_clients_created_by ON clients(created_by);
 
 -- ============================================================
 -- STAKEHOLDERS TABLE
@@ -58,8 +58,8 @@ CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
 
 CREATE TABLE IF NOT EXISTS stakeholders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL,
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  created_by UUID REFERENCES auth.users,
 
   -- Basic Info
   full_name VARCHAR(255) NOT NULL,
@@ -114,8 +114,8 @@ CREATE TABLE IF NOT EXISTS stakeholders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_stakeholders_org_id ON stakeholders(org_id);
 CREATE INDEX IF NOT EXISTS idx_stakeholders_client_id ON stakeholders(client_id);
+CREATE INDEX IF NOT EXISTS idx_stakeholders_created_by ON stakeholders(created_by);
 CREATE INDEX IF NOT EXISTS idx_stakeholders_availability ON stakeholders(availability);
 CREATE INDEX IF NOT EXISTS idx_stakeholders_response_time ON stakeholders(response_time);
 CREATE INDEX IF NOT EXISTS idx_stakeholders_decision_authority ON stakeholders(decision_authority);
@@ -236,54 +236,54 @@ ALTER TABLE client_contacts ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES (Basic - you may need to adjust based on your auth setup)
 -- ============================================================
 
--- Clients policies (assuming users have org_id in their JWT)
-DROP POLICY IF EXISTS "Users can view clients in their org" ON clients;
-CREATE POLICY "Users can view clients in their org" ON clients
-  FOR SELECT USING (true);  -- Update with proper auth check
+-- Clients policies
+DROP POLICY IF EXISTS "Users can view all clients" ON clients;
+CREATE POLICY "Users can view all clients" ON clients
+  FOR SELECT USING (auth.uid() IS NOT NULL);
 
-DROP POLICY IF EXISTS "Users can insert clients in their org" ON clients;
-CREATE POLICY "Users can insert clients in their org" ON clients
-  FOR INSERT WITH CHECK (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can create clients" ON clients;
+CREATE POLICY "Users can create clients" ON clients
+  FOR INSERT WITH CHECK (auth.uid() = created_by);
 
-DROP POLICY IF EXISTS "Users can update clients in their org" ON clients;
-CREATE POLICY "Users can update clients in their org" ON clients
-  FOR UPDATE USING (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can update clients" ON clients;
+CREATE POLICY "Users can update clients" ON clients
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
-DROP POLICY IF EXISTS "Users can delete clients in their org" ON clients;
-CREATE POLICY "Users can delete clients in their org" ON clients
-  FOR DELETE USING (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can delete clients" ON clients;
+CREATE POLICY "Users can delete clients" ON clients
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- Stakeholders policies
-DROP POLICY IF EXISTS "Users can view stakeholders in their org" ON stakeholders;
-CREATE POLICY "Users can view stakeholders in their org" ON stakeholders
-  FOR SELECT USING (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can view all stakeholders" ON stakeholders;
+CREATE POLICY "Users can view all stakeholders" ON stakeholders
+  FOR SELECT USING (auth.uid() IS NOT NULL);
 
-DROP POLICY IF EXISTS "Users can insert stakeholders in their org" ON stakeholders;
-CREATE POLICY "Users can insert stakeholders in their org" ON stakeholders
-  FOR INSERT WITH CHECK (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can create stakeholders" ON stakeholders;
+CREATE POLICY "Users can create stakeholders" ON stakeholders
+  FOR INSERT WITH CHECK (auth.uid() = created_by);
 
-DROP POLICY IF EXISTS "Users can update stakeholders in their org" ON stakeholders;
-CREATE POLICY "Users can update stakeholders in their org" ON stakeholders
-  FOR UPDATE USING (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can update stakeholders" ON stakeholders;
+CREATE POLICY "Users can update stakeholders" ON stakeholders
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
-DROP POLICY IF EXISTS "Users can delete stakeholders in their org" ON stakeholders;
-CREATE POLICY "Users can delete stakeholders in their org" ON stakeholders
-  FOR DELETE USING (true);  -- Update with proper auth check
+DROP POLICY IF EXISTS "Users can delete stakeholders" ON stakeholders;
+CREATE POLICY "Users can delete stakeholders" ON stakeholders
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- Stakeholder Interactions policies
 DROP POLICY IF EXISTS "Users can view interactions" ON stakeholder_interactions;
 CREATE POLICY "Users can view interactions" ON stakeholder_interactions
-  FOR SELECT USING (true);  -- Update with proper auth check
+  FOR SELECT USING (auth.uid() IS NOT NULL);
 
 DROP POLICY IF EXISTS "Users can insert interactions" ON stakeholder_interactions;
 CREATE POLICY "Users can insert interactions" ON stakeholder_interactions
-  FOR INSERT WITH CHECK (true);  -- Update with proper auth check
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Client Contacts policies
 DROP POLICY IF EXISTS "Users can view client contacts" ON client_contacts;
 CREATE POLICY "Users can view client contacts" ON client_contacts
-  FOR SELECT USING (true);  -- Update with proper auth check
+  FOR SELECT USING (auth.uid() IS NOT NULL);
 
 DROP POLICY IF EXISTS "Users can manage client contacts" ON client_contacts;
 CREATE POLICY "Users can manage client contacts" ON client_contacts
-  FOR ALL USING (true);  -- Update with proper auth check
+  FOR ALL USING (auth.uid() IS NOT NULL);
