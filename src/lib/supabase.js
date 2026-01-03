@@ -155,6 +155,182 @@ export const supabaseHelpers = {
 
     if (error) console.error('Error logging activity:', error)
     return { data, error }
+  },
+
+  // Clients
+  async getClients() {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching clients:', error)
+    return { data, error }
+  },
+
+  async getClient(id) {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) console.error('Error fetching client:', error)
+    return { data, error }
+  },
+
+  async createClient(client) {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert([client])
+      .select()
+
+    if (error) console.error('Error creating client:', error)
+    return { data, error }
+  },
+
+  async updateClient(id, updates) {
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating client:', error)
+    return { data, error }
+  },
+
+  async deleteClient(id) {
+    const { data, error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Error deleting client:', error)
+    return { data, error }
+  },
+
+  // Client Contacts
+  async getClientContacts(clientId) {
+    const { data, error } = await supabase
+      .from('client_contacts')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('is_primary', { ascending: false })
+
+    if (error) console.error('Error fetching client contacts:', error)
+    return { data, error }
+  },
+
+  async createClientContact(contact) {
+    const { data, error } = await supabase
+      .from('client_contacts')
+      .insert([contact])
+      .select()
+
+    if (error) console.error('Error creating client contact:', error)
+    return { data, error }
+  },
+
+  async updateClientContact(id, updates) {
+    const { data, error } = await supabase
+      .from('client_contacts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating client contact:', error)
+    return { data, error }
+  },
+
+  async deleteClientContact(id) {
+    const { data, error } = await supabase
+      .from('client_contacts')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Error deleting client contact:', error)
+    return { data, error }
+  },
+
+  // Stakeholders
+  async getStakeholders(clientId = null) {
+    let query = supabase
+      .from('stakeholders')
+      .select('*, clients(name, logo, logo_color)')
+      .order('created_at', { ascending: false })
+
+    if (clientId) {
+      query = query.eq('client_id', clientId)
+    }
+
+    const { data, error } = await query
+    if (error) console.error('Error fetching stakeholders:', error)
+    return { data, error }
+  },
+
+  async getStakeholder(id) {
+    const { data, error } = await supabase
+      .from('stakeholders')
+      .select('*, clients(name, logo, logo_color)')
+      .eq('id', id)
+      .single()
+
+    if (error) console.error('Error fetching stakeholder:', error)
+    return { data, error }
+  },
+
+  async createStakeholder(stakeholder) {
+    const { data, error } = await supabase
+      .from('stakeholders')
+      .insert([stakeholder])
+      .select()
+
+    if (error) console.error('Error creating stakeholder:', error)
+    return { data, error }
+  },
+
+  async updateStakeholder(id, updates) {
+    const { data, error } = await supabase
+      .from('stakeholders')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating stakeholder:', error)
+    return { data, error }
+  },
+
+  async deleteStakeholder(id) {
+    const { data, error } = await supabase
+      .from('stakeholders')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Error deleting stakeholder:', error)
+    return { data, error }
+  },
+
+  // Stakeholder Interactions
+  async getStakeholderInteractions(stakeholderId) {
+    const { data, error } = await supabase
+      .from('stakeholder_interactions')
+      .select('*')
+      .eq('stakeholder_id', stakeholderId)
+      .order('interaction_date', { ascending: false })
+
+    if (error) console.error('Error fetching stakeholder interactions:', error)
+    return { data, error }
+  },
+
+  async createStakeholderInteraction(interaction) {
+    const { data, error } = await supabase
+      .from('stakeholder_interactions')
+      .insert([interaction])
+      .select()
+
+    if (error) console.error('Error creating stakeholder interaction:', error)
+    return { data, error }
   }
 }
 
