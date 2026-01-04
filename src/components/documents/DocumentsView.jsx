@@ -26,6 +26,9 @@ const DocumentsView = () => {
       supabaseHelpers.getProjects(),
     ]);
 
+    console.log('Documents result:', docsResult);
+    console.log('Projects result:', projectsResult);
+
     if (docsResult.data) setDocuments(docsResult.data);
     if (projectsResult.data) setProjects(projectsResult.data);
     setLoading(false);
