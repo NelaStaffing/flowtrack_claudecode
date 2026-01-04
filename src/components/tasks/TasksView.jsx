@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TaskCard from './TaskCard';
-import AddTaskModal from './AddTaskModal';
+import CreateTaskWizard from './CreateTaskWizard';
 import { supabaseHelpers } from '@lib/supabase';
 
 export default function TasksView({ onNavigate, currentUserId }) {
@@ -232,10 +232,10 @@ export default function TasksView({ onNavigate, currentUserId }) {
           </div>
         )}
 
-        {/* Add Task Modal */}
+        {/* Add Task Wizard */}
         {showAddModal && (
-          <AddTaskModal
-            projects={projects}
+          <CreateTaskWizard
+            projectId={projects.length > 0 ? projects[0].id : null}
             onClose={() => setShowAddModal(false)}
             onCreate={handleTaskCreated}
           />
