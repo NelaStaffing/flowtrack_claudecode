@@ -10,6 +10,7 @@ import AIProjectWizard from './components/projects/AIProjectWizard';
 import ProjectDetail from './components/projects/ProjectDetail';
 import TasksView from './components/tasks/TasksView';
 import ClientsPage from './components/clients/ClientsPage';
+import StakeholdersPage from './components/stakeholders/StakeholdersPage';
 
 function App() {
   const { user, loading, signOut } = useAuth();
@@ -176,15 +177,7 @@ function App() {
         return <ClientsPage />;
 
       case 'stakeholders':
-        return (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-6xl mb-4">👔</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Stakeholders</h2>
-              <p className="text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-        );
+        return <StakeholdersPage />;
 
       default:
         return (
