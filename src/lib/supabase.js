@@ -451,6 +451,103 @@ export const supabaseHelpers = {
 
     if (error) console.error('Error fetching document template:', error)
     return { data, error }
+  },
+
+  // Team Management
+  async getTeamMembers() {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select(`
+        *,
+        email:auth.users(email)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching team members:', error)
+    return { data, error }
+  },
+
+  async getTeamMember(id) {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select(`
+        *,
+        email:auth.users(email)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) console.error('Error fetching team member:', error)
+    return { data, error }
+  },
+
+  async updateTeamMember(id, updates) {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating team member:', error)
+    return { data, error }
+  },
+
+  async deleteTeamMember(id) {
+    // This will cascade delete from auth.users
+    const { data, error } = await supabase.auth.admin.deleteUser(id)
+
+    if (error) console.error('Error deleting team member:', error)
+    return { data, error }
+  },
+
+  // Invitations
+  async getInvitations() {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select(`
+        *,
+        inviter:user_profiles!invited_by(full_name)
+      `)
+      .is('accepted_at', null)
+      .is('revoked_at', null)
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching invitations:', error)
+    return { data, error }
+  },
+
+  async createInvitation(invitation) {
+    const { data, error } = await supabase
+      .from('invitations')
+      .insert([invitation])
+      .select()
+
+    if (error) console.error('Error creating invitation:', error)
+    return { data, error }
+  },
+
+  async revokeInvitation(id) {
+    const { data, error } = await supabase
+      .from('invitations')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error revoking invitation:', error)
+    return { data, error }
+  },
+
+  async resendInvitation(id) {
+    const { data, error } = await supabase
+      .from('invitations')
+      .update({
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error resending invitation:', error)
+    return { data, error }
   }
 }
 
