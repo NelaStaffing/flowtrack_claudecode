@@ -124,7 +124,7 @@ const TaskSetupStep = ({ taskData, updateTaskData, projectId }) => {
             <option value="">Unassigned</option>
             {teamMembers.map((member) => (
               <option key={member.id} value={member.id}>
-                {member.full_name || member.email?.email || 'Unknown'}
+                {member.full_name || member.email || 'Unknown'}
               </option>
             ))}
           </select>

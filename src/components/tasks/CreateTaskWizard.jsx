@@ -62,7 +62,7 @@ const CreateTaskWizard = ({ onClose, onCreate, projectId, defaultMilestone = nul
       milestone_id: taskData.milestone_id || null,
       assigned_to: taskData.assigned_to || null,
       priority: taskData.priority,
-      status: 'to-do',
+      status: 'to_do',
       due_date: taskData.due_date ? new Date(taskData.due_date).toISOString() : null,
       estimated_hours: taskData.estimated_hours || null,
       tags: taskData.tags,
@@ -85,7 +85,7 @@ const CreateTaskWizard = ({ onClose, onCreate, projectId, defaultMilestone = nul
           project_id: projectId,
           title: subtask.title,
           parent_task_id: data[0].id,
-          status: 'to-do',
+          status: 'to_do',
           created_by: user.id,
         });
       }

@@ -70,7 +70,7 @@ const TeamManagementView = () => {
     const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
     const matchesSearch = !searchQuery ||
       member.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      member.email?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -326,7 +326,7 @@ const TeamMembersTab = ({
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">{member.full_name || 'Unknown'}</div>
-                          <div className="text-sm text-gray-500">{member.email?.email || 'No email'}</div>
+                          <div className="text-sm text-gray-500">{member.email || 'No email'}</div>
                         </div>
                       </div>
                     </td>

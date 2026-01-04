@@ -456,11 +456,8 @@ export const supabaseHelpers = {
   // Team Management
   async getTeamMembers() {
     const { data, error } = await supabase
-      .from('user_profiles')
-      .select(`
-        *,
-        email:auth.users(email)
-      `)
+      .from('user_profiles_with_email')
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) console.error('Error fetching team members:', error)
@@ -469,11 +466,8 @@ export const supabaseHelpers = {
 
   async getTeamMember(id) {
     const { data, error } = await supabase
-      .from('user_profiles')
-      .select(`
-        *,
-        email:auth.users(email)
-      `)
+      .from('user_profiles_with_email')
+      .select('*')
       .eq('id', id)
       .single()
 
