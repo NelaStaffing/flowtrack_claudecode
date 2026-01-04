@@ -7,7 +7,7 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
     title: blocker.title || '',
     description: blocker.description || '',
     severity: blocker.severity || 'medium',
-    blockerType: blocker.blocker_type || 'other',
+    source: blocker.source || 'other',
     impact: blocker.impact || '',
     status: blocker.status || 'active',
     resolution: blocker.resolution || '',
@@ -18,7 +18,7 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
       title: formData.title,
       description: formData.description,
       severity: formData.severity,
-      blocker_type: formData.blockerType,
+      source: formData.source,
       impact: formData.impact,
       status: formData.status,
       resolution: formData.resolution,
@@ -76,7 +76,7 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
     return `${diffDays} days`;
   };
 
-  const blockerTypes = [
+  const sourceTypes = [
     { value: 'client-dependency', label: 'Client dependency' },
     { value: 'technical-issue', label: 'Technical issue' },
     { value: 'resource-constraint', label: 'Resource constraint' },
@@ -115,7 +115,7 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
                 />
                 <span>{blocker.projects?.name}</span>
                 <span>•</span>
-                <span>{formData.blockerType.replace('-', ' ')}</span>
+                <span>{formData.source.replace('-', ' ')}</span>
                 <span>•</span>
                 <span>{getAge(blocker.created_at)} old</span>
               </div>
@@ -211,20 +211,20 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
             )}
           </div>
 
-          {/* Blocker Type */}
+          {/* Blocker Source */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blocker Type
+              Blocker Source
             </label>
             {isEditing ? (
               <select
-                value={formData.blockerType}
+                value={formData.source}
                 onChange={(e) =>
-                  setFormData({ ...formData, blockerType: e.target.value })
+                  setFormData({ ...formData, source: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               >
-                {blockerTypes.map((type) => (
+                {sourceTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
@@ -232,8 +232,8 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
               </select>
             ) : (
               <p className="text-gray-900">
-                {blockerTypes.find((t) => t.value === formData.blockerType)
-                  ?.label || formData.blockerType}
+                {sourceTypes.find((t) => t.value === formData.source)
+                  ?.label || formData.source}
               </p>
             )}
           </div>
@@ -353,14 +353,6 @@ const BlockerDetailDrawer = ({ blocker, onClose, onUpdate }) => {
                   {new Date(blocker.updated_at).toLocaleString()}
                 </span>
               </div>
-              {blocker.blocking_task_count > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Blocking Tasks:</span>
-                  <span className="text-red-700 font-medium">
-                    {blocker.blocking_task_count}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

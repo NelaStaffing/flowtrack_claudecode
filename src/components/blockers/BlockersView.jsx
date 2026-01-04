@@ -55,7 +55,7 @@ const BlockersView = () => {
     // Filter by severity
     if (filterSeverity !== 'all') {
       if (filterSeverity === 'mine') {
-        filtered = filtered.filter((b) => b.assigned_to === user?.id);
+        filtered = filtered.filter((b) => b.owner_id === user?.id);
       } else {
         filtered = filtered.filter((b) => b.severity === filterSeverity);
       }
@@ -389,13 +389,13 @@ const BlockerCard = ({ blocker, onClick }) => {
               <span className={`${getSeverityColor(blocker.severity)} w-2 h-2 rounded-full`} />
               <span>{blocker.projects?.name}</span>
               <span>•</span>
-              <span>{blocker.blocker_type}</span>
+              <span>{blocker.source || 'Unknown'}</span>
               <span>•</span>
               <span>{getAge(blocker.created_at)}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {blocker.assigned_to && (
+            {blocker.owner_id && (
               <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-medium">
                 AC
               </div>
@@ -403,16 +403,11 @@ const BlockerCard = ({ blocker, onClick }) => {
           </div>
         </div>
 
-        {/* Impact and Tasks */}
+        {/* Impact */}
         <div className="flex items-center gap-3 mt-3">
           <span className="text-sm text-gray-600">
-            <span className="font-medium">Impact:</span> {blocker.description}
+            <span className="font-medium">Impact:</span> {blocker.impact || blocker.description || 'No impact specified'}
           </span>
-          {blocker.blocking_task_count > 0 && (
-            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
-              Blocking {blocker.blocking_task_count} tasks
-            </span>
-          )}
         </div>
       </div>
     </div>

@@ -9,11 +9,11 @@ const ReportBlockerModal = ({ onClose, onBlockerCreated, projects }) => {
     description: '',
     projectId: '',
     severity: 'medium',
-    blockerType: 'client-dependency',
+    source: 'client-dependency',
     impact: '',
   });
 
-  const blockerTypes = [
+  const sourceTypes = [
     { value: 'client-dependency', label: 'Client dependency' },
     { value: 'technical-issue', label: 'Technical issue' },
     { value: 'resource-constraint', label: 'Resource constraint' },
@@ -36,11 +36,10 @@ const ReportBlockerModal = ({ onClose, onBlockerCreated, projects }) => {
       description: formData.description,
       project_id: formData.projectId,
       severity: formData.severity,
-      blocker_type: formData.blockerType,
+      source: formData.source,
       impact: formData.impact,
       status: 'active',
       created_by: user.id,
-      blocking_task_count: 0,
     };
 
     const { error } = await supabaseHelpers.createBlocker(newBlocker);
@@ -110,19 +109,19 @@ const ReportBlockerModal = ({ onClose, onBlockerCreated, projects }) => {
               </select>
             </div>
 
-            {/* Blocker Type */}
+            {/* Blocker Source */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Blocker Type
+                Blocker Source
               </label>
               <select
-                value={formData.blockerType}
+                value={formData.source}
                 onChange={(e) =>
-                  setFormData({ ...formData, blockerType: e.target.value })
+                  setFormData({ ...formData, source: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                {blockerTypes.map((type) => (
+                {sourceTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
