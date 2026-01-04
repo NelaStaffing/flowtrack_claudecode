@@ -66,7 +66,7 @@ export const supabaseHelpers = {
   async getTasks(projectId = null) {
     let query = supabase
       .from('tasks')
-      .select('*, projects(*), assignee:user_profiles_with_email!assigned_to(*)')
+      .select('*, projects(*)')
       .order('created_at', { ascending: false })
 
     if (projectId) {
@@ -76,7 +76,28 @@ export const supabaseHelpers = {
     const { data, error } = await query
     if (error) {
       console.error('Error fetching tasks:', error.message, error)
+      return { data, error }
     }
+
+    // Fetch assignee info separately for tasks that have an assignee
+    if (data && data.length > 0) {
+      const tasksWithAssignees = await Promise.all(
+        data.map(async (task) => {
+          if (task.assigned_to) {
+            const { data: assignee } = await supabase
+              .from('user_profiles_with_email')
+              .select('*')
+              .eq('id', task.assigned_to)
+              .single()
+
+            return { ...task, assignee }
+          }
+          return task
+        })
+      )
+      return { data: tasksWithAssignees, error: null }
+    }
+
     return { data, error }
   },
 
