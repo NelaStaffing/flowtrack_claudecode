@@ -572,6 +572,108 @@ export const supabaseHelpers = {
 
     if (error) console.error('Error resending invitation:', error)
     return { data, error }
+  },
+
+  // Notifications
+  async getNotifications(limit = 50) {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select(`
+        *,
+        actor:user_profiles!actor_id(full_name, avatar_color),
+        project:projects(name),
+        task:tasks(title)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) console.error('Error fetching notifications:', error)
+    return { data, error }
+  },
+
+  async getUnreadNotifications() {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select(`
+        *,
+        actor:user_profiles!actor_id(full_name, avatar_color),
+        project:projects(name),
+        task:tasks(title)
+      `)
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching unread notifications:', error)
+    return { data, error }
+  },
+
+  async getUnreadNotificationCount() {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('read', false)
+
+    if (error) console.error('Error fetching unread count:', error)
+    return { count, error }
+  },
+
+  async markNotificationAsRead(id) {
+    const { data, error } = await supabase
+      .from('notifications')
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error marking notification as read:', error)
+    return { data, error }
+  },
+
+  async markAllNotificationsAsRead() {
+    const { data, error } = await supabase
+      .from('notifications')
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq('read', false)
+      .select()
+
+    if (error) console.error('Error marking all notifications as read:', error)
+    return { data, error }
+  },
+
+  async deleteNotification(id) {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Error deleting notification:', error)
+    return { error }
+  },
+
+  async createNotification(notification) {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert([notification])
+      .select()
+
+    if (error) console.error('Error creating notification:', error)
+    return { data, error }
+  },
+
+  // Subscribe to real-time notifications
+  subscribeToNotifications(userId, callback) {
+    return supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe()
   }
 }
 
