@@ -337,7 +337,7 @@ export const supabaseHelpers = {
   async getDocuments(filters = {}) {
     let query = supabase
       .from('knowledge_base')
-      .select('*, projects(name, icon)')
+      .select('*, projects(*)')
       .order('updated_at', { ascending: false })
 
     if (filters.projectId) {
@@ -368,7 +368,7 @@ export const supabaseHelpers = {
   async getDocument(id) {
     const { data, error } = await supabase
       .from('knowledge_base')
-      .select('*, projects(name, icon)')
+      .select('*, projects(*)')
       .eq('id', id)
       .single()
 
@@ -379,7 +379,7 @@ export const supabaseHelpers = {
   async getDocumentByTask(taskId) {
     const { data, error } = await supabase
       .from('knowledge_base')
-      .select('*, projects(name, icon)')
+      .select('*, projects(*)')
       .eq('task_id', taskId)
       .maybeSingle()
 
