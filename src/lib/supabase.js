@@ -135,6 +135,17 @@ export const supabaseHelpers = {
     return { data, error }
   },
 
+  async updateBlocker(id, updates) {
+    const { data, error } = await supabase
+      .from('blockers')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating blocker:', error)
+    return { data, error }
+  },
+
   // Activity
   async getActivity(limit = 50) {
     const { data, error } = await supabase

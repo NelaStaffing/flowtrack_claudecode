@@ -12,6 +12,7 @@ import TasksView from './components/tasks/TasksView';
 import ClientsPage from './components/clients/ClientsPage';
 import StakeholdersPage from './components/stakeholders/StakeholdersPage';
 import DocumentsView from './components/documents/DocumentsView';
+import BlockersView from './components/blockers/BlockersView';
 
 function App() {
   const { user, loading, signOut } = useAuth();
@@ -123,15 +124,7 @@ function App() {
         return <DocumentsView />;
 
       case 'blockers':
-        return (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-6xl mb-4">⚠</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Blockers</h2>
-              <p className="text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-        );
+        return <BlockersView />;
 
       case 'activity':
         return (
