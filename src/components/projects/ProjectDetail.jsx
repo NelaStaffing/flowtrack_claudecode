@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, supabaseHelpers } from '@lib/supabase';
+import ProjectTasksTab from './ProjectTasksTab';
 
 function TabButton({ active, onClick, children }) {
   return (
@@ -256,49 +257,17 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
           )}
 
           {activeTab === 'tasks' && (
-            <div>
-              {tasks.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">✓</div>
-                  <p className="text-gray-500 mb-2">No tasks yet</p>
-                  <button className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                    Create First Task
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100"
-                    >
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" checked={task.status === 'done'} readOnly />
-                        <div>
-                          <p className="font-medium text-gray-900">{task.title}</p>
-                          {task.description && (
-                            <p className="text-sm text-gray-500">{task.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          task.status === 'done'
-                            ? 'bg-green-100 text-green-700'
-                            : task.status === 'in_progress'
-                            ? 'bg-blue-100 text-blue-700'
-                            : task.status === 'blocked'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {task.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ProjectTasksTab
+              tasks={tasks}
+              projectId={projectId}
+              onTaskCreated={(newTask) => {
+                setTasks([newTask, ...tasks]);
+              }}
+              onTaskUpdated={async (taskId, updates) => {
+                await supabaseHelpers.updateTask(taskId, updates);
+                await loadProjectData();
+              }}
+            />
           )}
 
           {activeTab === 'milestones' && (

@@ -66,7 +66,7 @@ export const supabaseHelpers = {
   async getTasks(projectId = null) {
     let query = supabase
       .from('tasks')
-      .select('*, projects(*)')
+      .select('*, projects(*), assignee:user_profiles_with_email!assigned_to(*)')
       .order('created_at', { ascending: false })
 
     if (projectId) {
