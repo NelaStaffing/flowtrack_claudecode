@@ -481,15 +481,19 @@ export const supabaseHelpers = {
     return { data, error }
   },
 
-  async updateTeamMember(id, updates) {
+  async updateUserProfile(id, updates) {
     const { data, error } = await supabase
       .from('user_profiles')
       .update(updates)
       .eq('id', id)
       .select()
 
-    if (error) console.error('Error updating team member:', error)
+    if (error) console.error('Error updating user profile:', error)
     return { data, error }
+  },
+
+  async updateTeamMember(id, updates) {
+    return this.updateUserProfile(id, updates)
   },
 
   async deleteTeamMember(id) {
@@ -504,15 +508,35 @@ export const supabaseHelpers = {
   async getInvitations() {
     const { data, error } = await supabase
       .from('invitations')
-      .select(`
-        *,
-        inviter:user_profiles!invited_by(full_name)
-      `)
+      .select('*')
       .is('accepted_at', null)
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
 
-    if (error) console.error('Error fetching invitations:', error)
+    if (error) {
+      console.error('Error fetching invitations:', error)
+      return { data, error }
+    }
+
+    // Fetch inviter details separately for each invitation
+    if (data && data.length > 0) {
+      const enrichedData = await Promise.all(
+        data.map(async (invite) => {
+          const { data: inviter } = await supabase
+            .from('user_profiles')
+            .select('full_name')
+            .eq('id', invite.invited_by)
+            .single()
+
+          return {
+            ...invite,
+            inviter: inviter || { full_name: 'Unknown' }
+          }
+        })
+      )
+      return { data: enrichedData, error: null }
+    }
+
     return { data, error }
   },
 
