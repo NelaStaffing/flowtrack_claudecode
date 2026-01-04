@@ -331,6 +331,115 @@ export const supabaseHelpers = {
 
     if (error) console.error('Error creating stakeholder interaction:', error)
     return { data, error }
+  },
+
+  // Documents (Knowledge Base)
+  async getDocuments(filters = {}) {
+    let query = supabase
+      .from('knowledge_base')
+      .select('*, projects(name, icon)')
+      .order('updated_at', { ascending: false })
+
+    if (filters.projectId) {
+      query = query.eq('project_id', filters.projectId)
+    }
+
+    if (filters.taskId) {
+      query = query.eq('task_id', filters.taskId)
+    }
+
+    if (filters.docType) {
+      query = query.eq('doc_type', filters.docType)
+    }
+
+    if (filters.createdBy) {
+      query = query.eq('created_by', filters.createdBy)
+    }
+
+    if (filters.search) {
+      query = query.ilike('title', `%${filters.search}%`)
+    }
+
+    const { data, error } = await query
+    if (error) console.error('Error fetching documents:', error)
+    return { data, error }
+  },
+
+  async getDocument(id) {
+    const { data, error } = await supabase
+      .from('knowledge_base')
+      .select('*, projects(name, icon)')
+      .eq('id', id)
+      .single()
+
+    if (error) console.error('Error fetching document:', error)
+    return { data, error }
+  },
+
+  async getDocumentByTask(taskId) {
+    const { data, error } = await supabase
+      .from('knowledge_base')
+      .select('*, projects(name, icon)')
+      .eq('task_id', taskId)
+      .maybeSingle()
+
+    if (error) console.error('Error fetching task document:', error)
+    return { data, error }
+  },
+
+  async createDocument(document) {
+    const { data, error } = await supabase
+      .from('knowledge_base')
+      .insert([document])
+      .select()
+
+    if (error) console.error('Error creating document:', error)
+    return { data, error }
+  },
+
+  async updateDocument(id, updates) {
+    const { data, error } = await supabase
+      .from('knowledge_base')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating document:', error)
+    return { data, error }
+  },
+
+  async deleteDocument(id) {
+    const { data, error } = await supabase
+      .from('knowledge_base')
+      .delete()
+      .eq('id', id)
+
+    if (error) console.error('Error deleting document:', error)
+    return { data, error }
+  },
+
+  // Document Templates
+  async getDocumentTemplates() {
+    const { data, error } = await supabase
+      .from('document_templates')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_system', { ascending: false }) // System templates first
+      .order('name', { ascending: true })
+
+    if (error) console.error('Error fetching document templates:', error)
+    return { data, error }
+  },
+
+  async getDocumentTemplate(id) {
+    const { data, error } = await supabase
+      .from('document_templates')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) console.error('Error fetching document template:', error)
+    return { data, error }
   }
 }
 
