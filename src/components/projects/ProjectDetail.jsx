@@ -289,6 +289,19 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
                 await supabaseHelpers.updateMilestone(milestoneId, updates);
                 await loadProjectData();
               }}
+              onTaskUpdated={async (taskId, updates) => {
+                const { error } = await supabaseHelpers.updateTask(taskId, updates);
+                if (!error) {
+                  setTasks(tasks.map(task =>
+                    task.id === taskId ? { ...task, ...updates } : task
+                  ));
+                }
+              }}
+              onTaskClick={(taskId) => {
+                // Switch to tasks tab when task is clicked
+                setActiveTab('tasks');
+                // TODO: Could add task detail modal/drawer in the future
+              }}
             />
           )}
 

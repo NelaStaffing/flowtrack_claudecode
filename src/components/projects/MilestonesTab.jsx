@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MilestoneDetailDrawer from './MilestoneDetailDrawer';
 
-const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, onMilestoneUpdated }) => {
+const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, onMilestoneUpdated, onTaskUpdated, onTaskClick }) => {
   const [viewMode, setViewMode] = useState('cards'); // cards, list, timeline
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
@@ -209,6 +209,8 @@ const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, 
             }
             setShowDetailDrawer(false);
           }}
+          onTaskUpdated={onTaskUpdated}
+          onTaskClick={onTaskClick}
         />
       )}
     </div>

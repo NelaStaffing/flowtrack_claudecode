@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabaseHelpers } from '../../lib/supabase';
 
-const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate }) => {
+const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTaskUpdated, onTaskClick }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: milestone.name || '',
@@ -53,6 +53,13 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate }) => 
     if (!dateString) return 'No date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleTaskToggle = async (taskId, currentStatus) => {
+    const newStatus = currentStatus === 'done' ? 'to_do' : 'done';
+    if (onTaskUpdated) {
+      await onTaskUpdated(taskId, { status: newStatus });
+    }
   };
 
   const getStatusColor = (status) => {
@@ -249,23 +256,28 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate }) => 
                   {linkedTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-100"
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={task.status === 'done'}
-                        readOnly
-                        className="w-4 h-4 text-emerald-600 rounded pointer-events-none"
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleTaskToggle(task.id, task.status);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-4 h-4 text-emerald-600 rounded cursor-pointer focus:ring-2 focus:ring-emerald-500"
                       />
                       <span
-                        className={`flex-1 text-sm ${
+                        onClick={() => onTaskClick && onTaskClick(task.id)}
+                        className={`flex-1 text-sm cursor-pointer ${
                           task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-900'
                         }`}
                       >
                         {task.title}
                       </span>
                       {task.status !== 'done' && (
-                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded capitalize">
                           {task.status.replace('_', ' ')}
                         </span>
                       )}
