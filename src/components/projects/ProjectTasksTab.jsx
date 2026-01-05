@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CreateTaskWizard from '../tasks/CreateTaskWizard';
+import TaskDetailDrawer from './TaskDetailDrawer';
 import { supabaseHelpers } from '../../lib/supabase';
 
 const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, milestones }) => {
@@ -7,6 +8,8 @@ const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, miles
   const [showTaskWizard, setShowTaskWizard] = useState(false);
   const [groupBy, setGroupBy] = useState('milestone'); // none, milestone, status, priority
   const [collapsedGroups, setCollapsedGroups] = useState(new Set());
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showTaskDrawer, setShowTaskDrawer] = useState(false);
 
   // Calculate counts for filter tabs
   const taskCounts = {
@@ -107,6 +110,11 @@ const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, miles
     }
   };
 
+  const handleTaskClick = (task) => {
+    setSelectedTask(task);
+    setShowTaskDrawer(true);
+  };
+
   return (
     <div>
       {/* Filter Tabs and Actions */}
@@ -181,6 +189,7 @@ const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, miles
           toggleGroup={toggleGroup}
           getSubtasks={getSubtasks}
           handleTaskToggle={handleTaskToggle}
+          handleTaskClick={handleTaskClick}
           getStatusBadge={getStatusBadge}
           formatDate={formatDate}
           getInitials={getInitials}
@@ -190,6 +199,7 @@ const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, miles
           tasks={parentTasks}
           getSubtasks={getSubtasks}
           handleTaskToggle={handleTaskToggle}
+          handleTaskClick={handleTaskClick}
           getStatusBadge={getStatusBadge}
           formatDate={formatDate}
           getInitials={getInitials}
@@ -209,6 +219,26 @@ const ProjectTasksTab = ({ tasks, projectId, onTaskCreated, onTaskUpdated, miles
           }}
         />
       )}
+
+      {/* Task Detail Drawer */}
+      {showTaskDrawer && selectedTask && (
+        <TaskDetailDrawer
+          task={selectedTask}
+          onClose={() => {
+            setShowTaskDrawer(false);
+            setSelectedTask(null);
+          }}
+          onUpdate={(updates) => {
+            setSelectedTask({ ...selectedTask, ...updates });
+            if (onTaskUpdated) {
+              onTaskUpdated(selectedTask.id, updates);
+            }
+          }}
+          onTaskUpdated={onTaskUpdated}
+          milestones={milestones}
+          subtasks={getSubtasks(selectedTask.id)}
+        />
+      )}
     </div>
   );
 };
@@ -220,6 +250,7 @@ const GroupedByMilestoneView = ({
   toggleGroup,
   getSubtasks,
   handleTaskToggle,
+  handleTaskClick,
   getStatusBadge,
   formatDate,
   getInitials,
@@ -295,6 +326,7 @@ const GroupedByMilestoneView = ({
                   task={task}
                   subtasks={getSubtasks(task.id)}
                   handleTaskToggle={handleTaskToggle}
+                  handleTaskClick={handleTaskClick}
                   getStatusBadge={getStatusBadge}
                   formatDate={formatDate}
                   getInitials={getInitials}
@@ -313,6 +345,7 @@ const FlatTaskList = ({
   tasks,
   getSubtasks,
   handleTaskToggle,
+  handleTaskClick,
   getStatusBadge,
   formatDate,
   getInitials,
@@ -324,6 +357,7 @@ const FlatTaskList = ({
         task={task}
         subtasks={getSubtasks(task.id)}
         handleTaskToggle={handleTaskToggle}
+        handleTaskClick={handleTaskClick}
         getStatusBadge={getStatusBadge}
         formatDate={formatDate}
         getInitials={getInitials}
@@ -333,14 +367,17 @@ const FlatTaskList = ({
 );
 
 // Task Row Component
-const TaskRow = ({ task, subtasks, handleTaskToggle, getStatusBadge, formatDate, getInitials, isSubtask = false }) => {
+const TaskRow = ({ task, subtasks, handleTaskToggle, handleTaskClick, getStatusBadge, formatDate, getInitials, isSubtask = false }) => {
   const statusBadge = getStatusBadge(task.status);
   const isDone = task.status === 'done';
 
   return (
     <>
       {/* Main Task Row */}
-      <div className={`flex items-center gap-4 p-4 hover:bg-gray-50 ${isSubtask ? 'pl-16' : ''}`}>
+      <div
+        className={`flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer ${isSubtask ? 'pl-16' : ''}`}
+        onClick={() => handleTaskClick && handleTaskClick(task)}
+      >
         {/* Checkbox */}
         <input
           type="checkbox"
@@ -350,6 +387,7 @@ const TaskRow = ({ task, subtasks, handleTaskToggle, getStatusBadge, formatDate,
             e.stopPropagation();
             handleTaskToggle(task.id, task.status);
           }}
+          onClick={(e) => e.stopPropagation()}
           className="w-5 h-5 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer"
         />
 
@@ -397,6 +435,7 @@ const TaskRow = ({ task, subtasks, handleTaskToggle, getStatusBadge, formatDate,
               task={subtask}
               subtasks={[]}
               handleTaskToggle={handleTaskToggle}
+              handleTaskClick={handleTaskClick}
               getStatusBadge={getStatusBadge}
               formatDate={formatDate}
               getInitials={getInitials}
