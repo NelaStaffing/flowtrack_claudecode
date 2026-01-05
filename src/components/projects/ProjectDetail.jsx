@@ -286,8 +286,13 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
                 setMilestones([...milestones, newMilestone]);
               }}
               onMilestoneUpdated={async (milestoneId, updates) => {
-                await supabaseHelpers.updateMilestone(milestoneId, updates);
-                await loadProjectData();
+                const { error } = await supabaseHelpers.updateMilestone(milestoneId, updates);
+                if (!error) {
+                  // Update local state instead of reloading all data
+                  setMilestones(milestones.map(milestone =>
+                    milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
+                  ));
+                }
               }}
               onTaskUpdated={async (taskId, updates) => {
                 const { error } = await supabaseHelpers.updateTask(taskId, updates);
