@@ -8,12 +8,16 @@ const TimelineTab = ({ milestones = [], tasks = [], projectId, onMilestoneUpdate
 
   // Calculate timeline bounds and grid
   const timelineData = useMemo(() => {
+    console.log('Timeline - milestones:', milestones);
+
     if (milestones.length === 0) return { columns: [], milestones: [], today: null };
 
     // Find earliest start and latest end date
     const dates = milestones
       .filter(m => m.due_date)
       .map(m => new Date(m.due_date));
+
+    console.log('Timeline - milestones with due_date:', dates.length, 'out of', milestones.length);
 
     if (dates.length === 0) return { columns: [], milestones: [], today: null };
 
@@ -158,12 +162,16 @@ const TimelineTab = ({ milestones = [], tasks = [], projectId, onMilestoneUpdate
   };
 
   if (timelineData.columns.length === 0) {
+    const message = milestones.length === 0
+      ? 'Add milestones with due dates to visualize your project timeline'
+      : `You have ${milestones.length} milestone${milestones.length > 1 ? 's' : ''}, but none have due dates set. Edit your milestones to add due dates.`;
+
     return (
       <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
         <div className="text-6xl mb-4">📅</div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">No timeline yet</h3>
         <p className="text-gray-500">
-          Add milestones with due dates to visualize your project timeline
+          {message}
         </p>
       </div>
     );
