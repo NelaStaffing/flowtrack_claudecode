@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { supabaseHelpers } from '../../lib/supabase';
+import FileUploadModal from './FileUploadModal';
 
 const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
   const [viewMode, setViewMode] = useState('grid'); // grid or list
@@ -390,20 +391,13 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
         </div>
       </div>
 
-      {/* Upload Modal - Placeholder */}
+      {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Upload Files</h3>
-            <p className="text-gray-600 mb-4">File upload functionality coming soon...</p>
-            <button
-              onClick={() => setShowUploadModal(false)}
-              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <FileUploadModal
+          projectId={projectId}
+          onClose={() => setShowUploadModal(false)}
+          onFileUploaded={onFileUploaded}
+        />
       )}
     </div>
   );
