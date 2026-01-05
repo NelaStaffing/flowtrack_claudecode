@@ -204,10 +204,13 @@ const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, 
             setSelectedMilestone(null);
           }}
           onUpdate={(updated) => {
+            // Update the selectedMilestone with new data so drawer shows updated values
+            setSelectedMilestone({ ...selectedMilestone, ...updated });
+
             if (onMilestoneUpdated) {
               onMilestoneUpdated(selectedMilestone.id, updated);
             }
-            setShowDetailDrawer(false);
+            // Don't close drawer - let user continue editing or close manually
           }}
           onTaskUpdated={onTaskUpdated}
           onTaskClick={onTaskClick}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabaseHelpers } from '../../lib/supabase';
 
 const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTaskUpdated, onTaskClick }) => {
@@ -11,6 +11,19 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
     progress: milestone.confidence || 0,  // UI uses 'progress' but DB column is 'confidence'
   });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when milestone prop changes (after save)
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        name: milestone.name || '',
+        description: milestone.description || '',
+        due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
+        status: milestone.status || 'upcoming',
+        progress: milestone.confidence || 0,
+      });
+    }
+  }, [milestone, isEditing]);
 
   // Filter tasks linked to this milestone
   const linkedTasks = tasks.filter(task => task.milestone_id === milestone.id);
