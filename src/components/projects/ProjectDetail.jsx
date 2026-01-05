@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase, supabaseHelpers } from '@lib/supabase';
 import ProjectTasksTab from './ProjectTasksTab';
 import MilestonesTab from './MilestonesTab';
+import FilesTab from './FilesTab';
 
 function TabButton({ active, onClick, children }) {
   return (
@@ -22,6 +23,7 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  const [files, setFiles] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +52,13 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
         await supabaseHelpers.getMilestones(projectId);
       if (!milestonesError && milestonesData) {
         setMilestones(milestonesData);
+      }
+
+      // Load files
+      const { data: filesData, error: filesError } =
+        await supabaseHelpers.getProjectFiles(projectId);
+      if (!filesError && filesData) {
+        setFiles(filesData);
       }
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -208,6 +217,9 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
           <TabButton active={activeTab === 'milestones'} onClick={() => setActiveTab('milestones')}>
             Milestones ({milestones.length})
           </TabButton>
+          <TabButton active={activeTab === 'files'} onClick={() => setActiveTab('files')}>
+            Files ({files.length})
+          </TabButton>
           <TabButton active={activeTab === 'team'} onClick={() => setActiveTab('team')}>
             Team
           </TabButton>
@@ -306,6 +318,19 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
                 // Switch to tasks tab when task is clicked
                 setActiveTab('tasks');
                 // TODO: Could add task detail modal/drawer in the future
+              }}
+            />
+          )}
+
+          {activeTab === 'files' && (
+            <FilesTab
+              projectId={projectId}
+              files={files}
+              onFileUploaded={async (newFile) => {
+                setFiles([newFile, ...files]);
+              }}
+              onFileDeleted={async (fileId) => {
+                setFiles(files.filter(f => f.id !== fileId));
               }}
             />
           )}

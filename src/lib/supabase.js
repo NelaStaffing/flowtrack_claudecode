@@ -700,6 +700,80 @@ export const supabaseHelpers = {
         callback
       )
       .subscribe()
+  },
+
+  // Project Files
+  async getProjectFiles(projectId) {
+    const { data, error } = await supabase
+      .from('project_files')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching project files:', error)
+    return { data, error }
+  },
+
+  async uploadFile(projectId, file, category = null) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: { message: 'User not authenticated' } }
+
+    // Upload file to storage
+    const filePath = `${projectId}/${Date.now()}_${file.name}`
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from('project-files')
+      .upload(filePath, file)
+
+    if (storageError) {
+      console.error('Error uploading file to storage:', storageError)
+      return { data: null, error: storageError }
+    }
+
+    // Create database record
+    const { data, error } = await supabase
+      .from('project_files')
+      .insert([{
+        project_id: projectId,
+        name: file.name,
+        file_path: filePath,
+        file_type: file.type,
+        file_size: file.size,
+        category: category,
+        uploaded_by: user.id
+      }])
+      .select()
+      .single()
+
+    if (error) console.error('Error creating file record:', error)
+    return { data, error }
+  },
+
+  async deleteFile(fileId, filePath) {
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from('project-files')
+      .remove([filePath])
+
+    if (storageError) {
+      console.error('Error deleting file from storage:', storageError)
+    }
+
+    // Delete database record
+    const { error } = await supabase
+      .from('project_files')
+      .delete()
+      .eq('id', fileId)
+
+    if (error) console.error('Error deleting file record:', error)
+    return { error }
+  },
+
+  async getFileUrl(filePath) {
+    const { data } = supabase.storage
+      .from('project-files')
+      .getPublicUrl(filePath)
+
+    return data.publicUrl
   }
 }
 
