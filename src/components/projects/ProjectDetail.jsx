@@ -261,6 +261,7 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
             <ProjectTasksTab
               tasks={tasks}
               projectId={projectId}
+              milestones={milestones}
               onTaskCreated={(newTask) => {
                 setTasks([newTask, ...tasks]);
               }}

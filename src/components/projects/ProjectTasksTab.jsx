@@ -345,7 +345,11 @@ const TaskRow = ({ task, subtasks, handleTaskToggle, getStatusBadge, formatDate,
         <input
           type="checkbox"
           checked={isDone}
-          onChange={() => handleTaskToggle(task.id, task.status)}
+          onChange={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleTaskToggle(task.id, task.status);
+          }}
           className="w-5 h-5 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer"
         />
 
