@@ -3,6 +3,7 @@ import { supabase, supabaseHelpers } from '@lib/supabase';
 import ProjectTasksTab from './ProjectTasksTab';
 import MilestonesTab from './MilestonesTab';
 import FilesTab from './FilesTab';
+import TimelineTab from './TimelineTab';
 
 function TabButton({ active, onClick, children }) {
   return (
@@ -217,6 +218,9 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
           <TabButton active={activeTab === 'milestones'} onClick={() => setActiveTab('milestones')}>
             Milestones ({milestones.length})
           </TabButton>
+          <TabButton active={activeTab === 'timeline'} onClick={() => setActiveTab('timeline')}>
+            Timeline
+          </TabButton>
           <TabButton active={activeTab === 'files'} onClick={() => setActiveTab('files')}>
             Files ({files.length})
           </TabButton>
@@ -318,6 +322,33 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
                 // Switch to tasks tab when task is clicked
                 setActiveTab('tasks');
                 // TODO: Could add task detail modal/drawer in the future
+              }}
+            />
+          )}
+
+          {activeTab === 'timeline' && (
+            <TimelineTab
+              milestones={milestones}
+              tasks={tasks}
+              projectId={projectId}
+              onMilestoneUpdated={async (milestoneId, updates) => {
+                const { error } = await supabaseHelpers.updateMilestone(milestoneId, updates);
+                if (!error) {
+                  setMilestones(milestones.map(milestone =>
+                    milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
+                  ));
+                }
+              }}
+              onTaskUpdated={async (taskId, updates) => {
+                const { error } = await supabaseHelpers.updateTask(taskId, updates);
+                if (!error) {
+                  setTasks(tasks.map(task =>
+                    task.id === taskId ? { ...task, ...updates } : task
+                  ));
+                }
+              }}
+              onTaskClick={(taskId) => {
+                setActiveTab('tasks');
               }}
             />
           )}
