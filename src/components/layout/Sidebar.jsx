@@ -42,7 +42,6 @@ export default function Sidebar({ collapsed, setCollapsed, currentView, setCurre
     { id: 'projects', icon: '📁', label: 'Projects', badge: 3 },
     { id: 'clients', icon: '🏢', label: 'Clients', badge: 4 },
     { id: 'stakeholders', icon: '👔', label: 'Stakeholders' },
-    { id: 'timeline', icon: '📅', label: 'Timeline' },
     { id: 'my-tasks', icon: '☑', label: 'My Tasks', badge: 8 },
     { id: 'documents', icon: '📄', label: 'Documents' },
   ];
