@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabaseHelpers } from '../../lib/supabase';
 
-const MilestoneDetailDrawer = ({ milestone, onClose, onUpdate }) => {
+const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: milestone.name || '',
@@ -11,6 +11,10 @@ const MilestoneDetailDrawer = ({ milestone, onClose, onUpdate }) => {
     progress: milestone.progress || 0,
   });
   const [saving, setSaving] = useState(false);
+
+  // Filter tasks linked to this milestone
+  const linkedTasks = tasks.filter(task => task.milestone_id === milestone.id);
+  const completedLinkedTasks = linkedTasks.filter(task => task.status === 'done').length;
 
   const statuses = [
     { value: 'planning', label: 'Planning', icon: '📋', color: 'gray' },
@@ -221,21 +225,58 @@ const MilestoneDetailDrawer = ({ milestone, onClose, onUpdate }) => {
             </div>
           </div>
 
-          {/* Tasks Section (if we have task count) */}
+          {/* Tasks Section */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Associated Tasks</h3>
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-purple-200">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-2xl font-bold text-gray-900 mb-1">
-                    {milestone.task_count || 0} Tasks
+                    {linkedTasks.length} Tasks
                   </p>
-                  <p className="text-sm text-gray-600">Linked to this milestone</p>
+                  <p className="text-sm text-gray-600">
+                    {completedLinkedTasks} of {linkedTasks.length} completed
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
                   <span className="text-2xl">📋</span>
                 </div>
               </div>
+
+              {/* Task List */}
+              {linkedTasks.length > 0 ? (
+                <div className="space-y-2 mt-4">
+                  {linkedTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-100"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={task.status === 'done'}
+                        readOnly
+                        className="w-4 h-4 text-emerald-600 rounded pointer-events-none"
+                      />
+                      <span
+                        className={`flex-1 text-sm ${
+                          task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-900'
+                        }`}
+                      >
+                        {task.title}
+                      </span>
+                      {task.status !== 'done' && (
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                          {task.status.replace('_', ' ')}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center mt-4 py-2">
+                  No tasks linked to this milestone yet
+                </p>
+              )}
             </div>
           </div>
         </div>

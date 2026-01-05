@@ -280,6 +280,7 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
           {activeTab === 'milestones' && (
             <MilestonesTab
               milestones={milestones}
+              tasks={tasks}
               projectId={projectId}
               onMilestoneCreated={(newMilestone) => {
                 setMilestones([...milestones, newMilestone]);
