@@ -49,7 +49,7 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
     };
 
     files.forEach(file => {
-      const ext = file.name?.split('.').pop()?.toLowerCase();
+      const ext = file.title?.split('.').pop()?.toLowerCase();
       if (['pdf', 'doc', 'docx', 'txt', 'md'].includes(ext)) {
         byType.documents += file.file_size || 0;
       } else if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
@@ -95,8 +95,8 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
     }
   };
 
-  const getFileIcon = (fileName) => {
-    const ext = fileName?.split('.').pop()?.toLowerCase();
+  const getFileIcon = (fileTitle) => {
+    const ext = fileTitle?.split('.').pop()?.toLowerCase();
     const icons = {
       pdf: '📕',
       doc: '📘',
@@ -120,8 +120,8 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
     return icons[ext] || '📄';
   };
 
-  const getFileColor = (fileName) => {
-    const ext = fileName?.split('.').pop()?.toLowerCase();
+  const getFileColor = (fileTitle) => {
+    const ext = fileTitle?.split('.').pop()?.toLowerCase();
     if (['pdf'].includes(ext)) return 'bg-red-50';
     if (['doc', 'docx'].includes(ext)) return 'bg-blue-50';
     if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(ext)) return 'bg-blue-100';
@@ -249,13 +249,13 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
                   className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all"
                 >
                   {/* File Preview */}
-                  <div className={`h-32 flex items-center justify-center ${getFileColor(file.name)}`}>
-                    <div className="text-5xl">{getFileIcon(file.name)}</div>
+                  <div className={`h-32 flex items-center justify-center ${getFileColor(file.title)}`}>
+                    <div className="text-5xl">{getFileIcon(file.title)}</div>
                   </div>
 
                   {/* File Info */}
                   <div className="p-4">
-                    <h4 className="font-medium text-gray-900 truncate mb-2">{file.name}</h4>
+                    <h4 className="font-medium text-gray-900 truncate mb-2">{file.title}</h4>
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>{formatDate(file.created_at)}</span>
                       <span>{formatFileSize(file.file_size)}</span>
@@ -271,11 +271,11 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
                   key={file.id}
                   className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className={`w-10 h-10 rounded flex items-center justify-center ${getFileColor(file.name)}`}>
-                    <span className="text-xl">{getFileIcon(file.name)}</span>
+                  <div className={`w-10 h-10 rounded flex items-center justify-center ${getFileColor(file.title)}`}>
+                    <span className="text-xl">{getFileIcon(file.title)}</span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{file.name}</h4>
+                    <h4 className="font-medium text-gray-900">{file.title}</h4>
                     <p className="text-sm text-gray-500">{formatDate(file.created_at)}</p>
                   </div>
                   <span className="text-sm text-gray-500">{formatFileSize(file.file_size)}</span>
@@ -345,11 +345,11 @@ const FilesTab = ({ projectId, files = [], onFileUploaded, onFileDeleted }) => {
             ) : (
               recentUploads.map((file) => (
                 <div key={file.id} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded flex items-center justify-center ${getFileColor(file.name)}`}>
-                    <span className="text-sm">{getFileIcon(file.name)}</span>
+                  <div className={`w-8 h-8 rounded flex items-center justify-center ${getFileColor(file.title)}`}>
+                    <span className="text-sm">{getFileIcon(file.title)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{file.title}</p>
                     <p className="text-xs text-gray-500">{formatDate(file.created_at)}</p>
                   </div>
                 </div>

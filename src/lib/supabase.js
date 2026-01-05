@@ -729,17 +729,20 @@ export const supabaseHelpers = {
       return { data: null, error: storageError }
     }
 
-    // Create database record
+    // Create database record using existing schema
     const { data, error } = await supabase
       .from('project_files')
       .insert([{
         project_id: projectId,
-        name: file.name,
+        title: file.name,              // Use 'title' instead of 'name'
         file_path: filePath,
         file_type: file.type,
         file_size: file.size,
         category: category,
-        uploaded_by: user.id
+        type: 'standalone',            // Set type for uploaded files
+        author_id: user.id,            // Use 'author_id'
+        uploaded_by: user.id,          // Also set 'uploaded_by'
+        content: null                  // No content for file uploads
       }])
       .select()
       .single()
