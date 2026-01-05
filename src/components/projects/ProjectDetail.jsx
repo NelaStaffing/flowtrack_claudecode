@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, supabaseHelpers } from '@lib/supabase';
 import ProjectTasksTab from './ProjectTasksTab';
+import MilestonesTab from './MilestonesTab';
 
 function TabButton({ active, onClick, children }) {
   return (
@@ -271,49 +272,17 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
           )}
 
           {activeTab === 'milestones' && (
-            <div>
-              {milestones.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🎯</div>
-                  <p className="text-gray-500 mb-2">No milestones yet</p>
-                  <button className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                    Add Milestone
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {milestones.map((milestone) => (
-                    <div
-                      key={milestone.id}
-                      className="flex items-start justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900">{milestone.name}</p>
-                        {milestone.description && (
-                          <p className="text-sm text-gray-500 mt-1">{milestone.description}</p>
-                        )}
-                        {milestone.due_date && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            Due: {new Date(milestone.due_date).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          milestone.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : milestone.status === 'active'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {milestone.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <MilestonesTab
+              milestones={milestones}
+              projectId={projectId}
+              onMilestoneCreated={(newMilestone) => {
+                setMilestones([...milestones, newMilestone]);
+              }}
+              onMilestoneUpdated={async (milestoneId, updates) => {
+                await supabaseHelpers.updateMilestone(milestoneId, updates);
+                await loadProjectData();
+              }}
+            />
           )}
 
           {activeTab === 'team' && (

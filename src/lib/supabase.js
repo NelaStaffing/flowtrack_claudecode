@@ -134,6 +134,17 @@ export const supabaseHelpers = {
     return { data, error }
   },
 
+  async updateMilestone(id, updates) {
+    const { data, error } = await supabase
+      .from('milestones')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) console.error('Error updating milestone:', error)
+    return { data, error }
+  },
+
   // Blockers
   async getBlockers(status = 'active') {
     const { data, error } = await supabase
