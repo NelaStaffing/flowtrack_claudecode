@@ -266,8 +266,13 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
                 setTasks([newTask, ...tasks]);
               }}
               onTaskUpdated={async (taskId, updates) => {
-                await supabaseHelpers.updateTask(taskId, updates);
-                await loadProjectData();
+                const { error } = await supabaseHelpers.updateTask(taskId, updates);
+                if (!error) {
+                  // Update local state instead of reloading all data
+                  setTasks(tasks.map(task =>
+                    task.id === taskId ? { ...task, ...updates } : task
+                  ));
+                }
               }}
             />
           )}
