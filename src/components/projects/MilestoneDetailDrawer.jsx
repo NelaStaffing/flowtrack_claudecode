@@ -7,8 +7,8 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
     name: milestone.name || '',
     description: milestone.description || '',
     due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
-    status: milestone.status || 'planning',
-    progress: milestone.progress || 0,
+    status: milestone.status || 'upcoming',
+    progress: milestone.confidence || 0,  // UI uses 'progress' but DB column is 'confidence'
   });
   const [saving, setSaving] = useState(false);
 
@@ -17,7 +17,7 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
   const completedLinkedTasks = linkedTasks.filter(task => task.status === 'done').length;
 
   const statuses = [
-    { value: 'planning', label: 'Planning', icon: '📋', color: 'gray' },
+    { value: 'upcoming', label: 'Upcoming', icon: '📋', color: 'gray' },
     { value: 'active', label: 'In Progress', icon: '🚀', color: 'purple' },
     { value: 'completed', label: 'Completed', icon: '✓', color: 'emerald' },
   ];
@@ -30,7 +30,7 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
       description: formData.description || null,
       due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
       status: formData.status,
-      progress: parseInt(formData.progress) || 0,
+      confidence: parseInt(formData.progress) || 0,  // Map UI 'progress' to DB 'confidence'
     };
 
     const { error } = await supabaseHelpers.updateMilestone(milestone.id, updates);
@@ -66,13 +66,13 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
     const colors = {
       completed: { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300' },
       active: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
-      planning: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300' },
+      upcoming: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300' },
     };
-    return colors[status] || colors.planning;
+    return colors[status] || colors.upcoming;
   };
 
   const statusColor = getStatusColor(milestone.status);
-  const progress = isEditing ? formData.progress : (milestone.progress || 0);
+  const progress = isEditing ? formData.progress : (milestone.confidence || 0);  // Use 'confidence' from DB
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -305,8 +305,8 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
                       name: milestone.name || '',
                       description: milestone.description || '',
                       due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
-                      status: milestone.status || 'planning',
-                      progress: milestone.progress || 0,
+                      status: milestone.status || 'upcoming',
+                      progress: milestone.confidence || 0,  // Reset to DB value
                     });
                   }}
                   disabled={saving}

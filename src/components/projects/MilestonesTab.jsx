@@ -11,7 +11,7 @@ const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, 
     total: milestones.length,
     completed: milestones.filter((m) => m.status === 'completed').length,
     in_progress: milestones.filter((m) => m.status === 'active').length,
-    upcoming: milestones.filter((m) => m.status === 'planning').length,
+    upcoming: milestones.filter((m) => m.status === 'upcoming').length,
   };
 
   const handleMilestoneClick = (milestone) => {
@@ -23,9 +23,9 @@ const MilestonesTab = ({ milestones, tasks = [], projectId, onMilestoneCreated, 
     const colors = {
       completed: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
       active: { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
-      planning: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
+      upcoming: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
     };
-    return colors[status] || colors.planning;
+    return colors[status] || colors.upcoming;
   };
 
   const formatDate = (dateString) => {
