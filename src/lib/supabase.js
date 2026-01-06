@@ -141,7 +141,13 @@ export const supabaseHelpers = {
       .eq('id', id)
       .select()
 
-    if (error) console.error('Error updating milestone:', error)
+    if (error) {
+      console.error('Error updating milestone:', error)
+      console.error('Milestone ID:', id)
+      console.error('Updates attempted:', updates)
+    } else {
+      console.log('Milestone updated successfully:', data)
+    }
     return { data, error }
   },
 
