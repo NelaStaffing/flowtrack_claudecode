@@ -15,6 +15,7 @@ import DocumentsView from './components/documents/DocumentsView';
 import BlockersView from './components/blockers/BlockersView';
 import TeamManagementView from './components/team/TeamManagementView';
 import ReportsView from './components/reports/ReportsView';
+import UserProfile from './components/profile/UserProfile';
 
 function App() {
   const { user, loading, signOut } = useAuth();
@@ -139,6 +140,9 @@ function App() {
 
       case 'stakeholders':
         return <StakeholdersPage />;
+
+      case 'profile':
+        return <UserProfile />;
 
       default:
         return (
