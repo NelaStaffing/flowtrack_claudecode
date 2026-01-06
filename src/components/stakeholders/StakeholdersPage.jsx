@@ -3,6 +3,7 @@ import { supabaseHelpers } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import StakeholderDetailDrawer from './StakeholderDetailDrawer';
 import AddStakeholderModal from './AddStakeholderModal';
+import InviteStakeholderModal from './InviteStakeholderModal';
 
 export default function StakeholdersPage() {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ export default function StakeholdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStakeholder, setSelectedStakeholder] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
     loadStakeholders();
@@ -97,13 +99,22 @@ export default function StakeholdersPage() {
               Track communication preferences and availability to improve project planning
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium flex items-center gap-2"
-          >
-            <span>+</span>
-            Add Stakeholder
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="px-4 py-2 bg-white border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 font-medium flex items-center gap-2"
+            >
+              <span>📧</span>
+              Invite Stakeholder
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium flex items-center gap-2"
+            >
+              <span>+</span>
+              Add Stakeholder
+            </button>
+          </div>
         </div>
       </div>
 
@@ -324,6 +335,17 @@ export default function StakeholdersPage() {
         <AddStakeholderModal
           onClose={() => setShowAddModal(false)}
           onStakeholderCreated={handleStakeholderCreated}
+        />
+      )}
+
+      {/* Invite Stakeholder Modal */}
+      {showInviteModal && (
+        <InviteStakeholderModal
+          onClose={() => setShowInviteModal(false)}
+          onInvitationSent={() => {
+            setShowInviteModal(false);
+            // Optionally show a success message
+          }}
         />
       )}
     </div>
