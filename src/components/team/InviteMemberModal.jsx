@@ -111,7 +111,11 @@ const InviteMemberModal = ({ onClose, onInviteSent }) => {
       });
 
       if (emailResult.success) {
-        console.log('Invitation email sent successfully');
+        if (emailResult.mock) {
+          console.log('✅ Invitation created successfully (mock mode - check console for details)');
+        } else {
+          console.log('✅ Invitation email sent successfully');
+        }
       } else {
         console.warn('Email sending failed, but invitation was created:', emailResult.error);
         // Still proceed - the invitation exists in the database

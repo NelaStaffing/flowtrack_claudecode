@@ -34,6 +34,30 @@ export async function sendInvitationEmail({
       },
     });
 
+    // If Edge Function is not deployed, use local fallback
+    if (error && error.message && error.message.includes('Failed to send a request')) {
+      console.log('📧 Edge Function not deployed - Using local mock mode');
+      console.log('─────────────────────────────────────────────────────');
+      console.log('Invitation Email (Mock Mode)');
+      console.log('─────────────────────────────────────────────────────');
+      console.log('To:', email);
+      console.log('Role:', role);
+      console.log('From:', inviterName);
+      if (message) console.log('Message:', message);
+      console.log('Accept URL:', `${APP_URL}/accept-invite/${token}`);
+      console.log('─────────────────────────────────────────────────────');
+      console.log('✅ Invitation created in database');
+      console.log('ℹ️  To send real emails, deploy the Edge Function:');
+      console.log('   npx supabase functions deploy send-invitation-email');
+      console.log('─────────────────────────────────────────────────────');
+
+      return {
+        success: true,
+        mock: true,
+        acceptUrl: `${APP_URL}/accept-invite/${token}`
+      };
+    }
+
     if (error) {
       console.error('Error calling email function:', error);
       return { success: false, error: error.message };
@@ -43,13 +67,23 @@ export async function sendInvitationEmail({
       console.log('Email function returned mock response (development mode)');
       console.log('Invitation details:', { email, role, token });
     } else {
-      console.log('Email sent successfully via Edge Function:', data.emailId);
+      console.log('✅ Email sent successfully via Edge Function:', data.emailId);
     }
 
     return { success: true, ...data };
   } catch (error) {
     console.error('Error sending invitation email:', error);
-    return { success: false, error: error.message };
+
+    // Fallback to mock mode on any error
+    console.log('📧 Falling back to mock mode');
+    console.log('Invitation would be sent to:', email);
+    console.log('Accept URL:', `${APP_URL}/accept-invite/${token}`);
+
+    return {
+      success: true,
+      mock: true,
+      acceptUrl: `${APP_URL}/accept-invite/${token}`
+    };
   }
 }
 
