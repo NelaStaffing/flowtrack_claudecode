@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabaseHelpers } from '../../lib/supabase';
+import { sendInvitationEmail } from '../../lib/emailService';
 import InviteMemberModal from './InviteMemberModal';
 import EditMemberModal from './EditMemberModal';
 
@@ -57,12 +58,42 @@ const TeamManagementView = () => {
     }
   };
 
-  const handleResendInvite = async (id) => {
-    const { error } = await supabaseHelpers.resendInvitation(id);
-    if (!error) {
-      alert('Invitation resent successfully!');
-      await loadData();
+  const handleResendInvite = async (invitationId) => {
+    // Find the invitation
+    const invitation = invitations.find(inv => inv.id === invitationId);
+    if (!invitation) {
+      alert('Invitation not found');
+      return;
     }
+
+    // Update expiration date in database
+    const { error } = await supabaseHelpers.resendInvitation(invitationId);
+    if (error) {
+      alert('Failed to resend invitation');
+      return;
+    }
+
+    // Send email
+    try {
+      const emailResult = await sendInvitationEmail({
+        email: invitation.email,
+        role: invitation.role,
+        message: invitation.message,
+        inviterName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'A team member',
+        token: invitation.token,
+      });
+
+      if (emailResult.success) {
+        alert('Invitation resent successfully!');
+      } else {
+        alert('Invitation updated, but email failed to send. Please try again.');
+      }
+    } catch (emailError) {
+      console.error('Error sending invitation email:', emailError);
+      alert('Invitation updated, but email failed to send.');
+    }
+
+    await loadData();
   };
 
   // Filter members

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabaseHelpers } from '../../lib/supabase';
+import { sendInvitationEmail } from '../../lib/emailService';
 
 const InviteMemberModal = ({ onClose, onInviteSent }) => {
   const { user } = useAuth();
@@ -48,6 +49,13 @@ const InviteMemberModal = ({ onClose, onInviteSent }) => {
     return re.test(email);
   };
 
+  const generateInvitationToken = () => {
+    // Generate a secure random token
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -67,11 +75,16 @@ const InviteMemberModal = ({ onClose, onInviteSent }) => {
     setSubmitting(true);
     setErrors({});
 
+    // Generate invitation token
+    const token = generateInvitationToken();
+
     const invitation = {
       email: formData.email.toLowerCase().trim(),
       role: formData.role,
       message: formData.message.trim() || null,
       invited_by: user.id,
+      token,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
     };
 
     const { data, error } = await supabaseHelpers.createInvitation(invitation);
@@ -87,9 +100,26 @@ const InviteMemberModal = ({ onClose, onInviteSent }) => {
       return;
     }
 
-    // In a real app, you would send an email here with the invitation token
-    // For now, we'll just log it
-    console.log('Invitation created:', data);
+    // Send invitation email
+    try {
+      const emailResult = await sendInvitationEmail({
+        email: invitation.email,
+        role: invitation.role,
+        message: invitation.message,
+        inviterName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'A team member',
+        token: invitation.token,
+      });
+
+      if (emailResult.success) {
+        console.log('Invitation email sent successfully');
+      } else {
+        console.warn('Email sending failed, but invitation was created:', emailResult.error);
+        // Still proceed - the invitation exists in the database
+      }
+    } catch (emailError) {
+      console.error('Error sending invitation email:', emailError);
+      // Continue anyway - the invitation was created
+    }
 
     setSubmitting(false);
     onInviteSent();
