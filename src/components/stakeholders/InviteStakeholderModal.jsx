@@ -76,10 +76,17 @@ const InviteStakeholderModal = ({ onClose, onInvitationSent, projectId = null })
 
       if (inviteError) {
         console.error('Error creating invitation:', inviteError);
+        console.error('Error code:', inviteError.code);
+        console.error('Error message:', inviteError.message);
+        console.error('Error details:', inviteError.details);
+        console.error('Error hint:', inviteError.hint);
+
         if (inviteError.code === '23505') {
           setErrors({ email: 'An invitation has already been sent to this email' });
+        } else if (inviteError.code === '42P01') {
+          alert('Database table not found. Please apply the migration:\n\nRun in your terminal:\nnpx supabase db reset\n\nOr apply the specific migration:\nnpx supabase migration up');
         } else {
-          alert('Failed to create invitation. Please try again.');
+          alert(`Failed to create invitation: ${inviteError.message}\n\nError code: ${inviteError.code}`);
         }
         setLoading(false);
         return;
