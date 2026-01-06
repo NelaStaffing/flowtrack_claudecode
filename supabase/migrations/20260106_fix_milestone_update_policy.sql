@@ -1,16 +1,26 @@
 -- ============================================================
 -- Fix Milestone Update RLS Policy
 -- ============================================================
--- The previous policy only allowed users to update milestones they created,
--- which prevented team members from editing milestones in their projects.
--- This migration updates the policy to allow any authenticated user to update
--- milestones (similar to how tasks work where assigned users can also update).
+-- The previous policy only allowed users to update milestones they created.
+-- This migration updates the policy with role-based access control:
+-- - Admins can update any milestone
+-- - Regular users can only update milestones they created
 
 -- Drop the existing restrictive policy
 DROP POLICY IF EXISTS "Users can update their milestones" ON milestones;
 
--- Create a more permissive policy that allows authenticated users to update milestones
--- This matches the tasks table pattern where both creators and assigned users can update
+-- Create role-based policy for milestone updates
 CREATE POLICY "Users can update milestones" ON milestones
   FOR UPDATE
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IS NOT NULL AND (
+      -- Admins can update any milestone
+      EXISTS (
+        SELECT 1 FROM user_profiles
+        WHERE id = auth.uid() AND role = 'admin'
+      )
+      OR
+      -- Regular users can only update milestones they created
+      created_by = auth.uid()
+    )
+  );
