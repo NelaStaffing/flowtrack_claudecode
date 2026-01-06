@@ -16,7 +16,7 @@ CREATE POLICY "Users can update milestones" ON milestones
     auth.uid() IS NOT NULL AND (
       -- Admins can update any milestone
       EXISTS (
-        SELECT 1 FROM user_profiles
+        SELECT 1 FROM users
         WHERE id = auth.uid() AND role = 'admin'
       )
       OR
