@@ -4,13 +4,27 @@ This guide explains how to set up email functionality for sending team member in
 
 ## Overview
 
-FlowTrack uses [Resend](https://resend.com) for sending transactional emails. Resend is a modern email API designed for developers, offering:
+FlowTrack uses **Supabase Edge Functions** with [Resend](https://resend.com) for sending transactional emails securely. This architecture ensures:
 
+- ✅ API keys never exposed to the client
+- ✅ CORS issues completely avoided
+- ✅ Server-side email sending
+- ✅ Better security and reliability
+- ✅ Easy to scale and monitor
+
+Resend provides:
 - Easy integration
 - High deliverability
 - Simple pricing
-- Beautiful email templates
 - Real-time delivery tracking
+
+## Architecture
+
+```
+Client (Browser) → Supabase Edge Function → Resend API → Email Sent
+```
+
+The email is sent server-side through a Supabase Edge Function, keeping your API key secure.
 
 ## Setup Steps
 
@@ -43,27 +57,67 @@ For production use, you should verify your own domain:
 
 **For development**: You can use the default `onboarding@resend.dev` which has limits but works for testing.
 
-### 4. Add Environment Variables
+### 4. Deploy the Edge Function
 
-Add the following to your `.env` file:
+The Edge Function is already created at `supabase/functions/send-invitation-email/`.
+
+Deploy it to your Supabase project:
+
+```bash
+# Login to Supabase CLI (if not already)
+npx supabase login
+
+# Link to your project
+npx supabase link --project-ref your-project-ref
+
+# Deploy the function
+npx supabase functions deploy send-invitation-email
+```
+
+**Find your project-ref**:
+- Go to Supabase dashboard
+- Settings → General → Reference ID
+
+### 5. Set Supabase Secrets
+
+Add your Resend API key as a Supabase secret (server-side, never exposed to client):
+
+```bash
+# Set RESEND_API_KEY secret
+npx supabase secrets set RESEND_API_KEY=re_your_actual_api_key_here
+
+# Set FROM_EMAIL secret (optional, defaults to onboarding@resend.dev)
+npx supabase secrets set FROM_EMAIL="FlowTrack <onboarding@yourdomain.com>"
+```
+
+**Important**: These are server-side secrets, not client environment variables. They're never exposed to the browser.
+
+### 6. Configure Client Environment
+
+Add only the app URL to your `.env` file:
 
 ```env
-# Email Configuration
-VITE_RESEND_API_KEY=re_your_actual_api_key_here
-VITE_FROM_EMAIL=FlowTrack <onboarding@yourdomain.com>
 VITE_APP_URL=http://localhost:5173
 ```
 
-**Notes**:
-- Replace `re_your_actual_api_key_here` with your actual Resend API key
-- If you haven't verified a domain, use `FlowTrack <onboarding@resend.dev>`
-- For production, set `VITE_APP_URL` to your actual domain
+For production, set this to your actual domain (e.g., `https://flowtrack.yourcompany.com`).
 
-### 5. Restart Your Development Server
+### 7. Restart Your Development Server
 
 ```bash
 npm run dev
 ```
+
+## Quick Start (Skip Edge Function for Testing)
+
+If you want to test the invitation flow without setting up email:
+
+1. The Edge Function will work in "mock mode" if no `RESEND_API_KEY` is set
+2. Invitation will be created in database
+3. Console will log invitation details
+4. You can manually construct the accept URL: `http://localhost:5173/accept-invite/{token}`
+
+This is perfect for development and testing the invitation flow.
 
 ## Testing Email Functionality
 
@@ -109,13 +163,21 @@ The invitation email includes:
 
 ### Email Not Sending
 
-**Check API Key**:
+**Check Edge Function Deployment**:
 ```bash
-# In browser console
-console.log(import.meta.env.VITE_RESEND_API_KEY)
+# Verify function is deployed
+npx supabase functions list
 ```
-- Should show your API key starting with `re_`
-- If undefined, check your `.env` file and restart dev server
+- Should show `send-invitation-email` as deployed
+- If not, deploy it: `npx supabase functions deploy send-invitation-email`
+
+**Check Supabase Secrets**:
+```bash
+# List secrets (won't show values, just keys)
+npx supabase secrets list
+```
+- Should show `RESEND_API_KEY` and optionally `FROM_EMAIL`
+- If missing, set them: `npx supabase secrets set RESEND_API_KEY=re_xxx`
 
 **Check Domain**:
 - If using custom domain, ensure DNS records are verified
