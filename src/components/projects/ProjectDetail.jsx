@@ -301,14 +301,11 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
               onMilestoneCreated={(newMilestone) => {
                 setMilestones([...milestones, newMilestone]);
               }}
-              onMilestoneUpdated={async (milestoneId, updates) => {
-                const { error } = await supabaseHelpers.updateMilestone(milestoneId, updates);
-                if (!error) {
-                  // Update local state instead of reloading all data
-                  setMilestones(milestones.map(milestone =>
-                    milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
-                  ));
-                }
+              onMilestoneUpdated={(milestoneId, updates) => {
+                // Update local state with the data already saved to DB by the drawer
+                setMilestones(milestones.map(milestone =>
+                  milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
+                ));
               }}
               onTaskUpdated={async (taskId, updates) => {
                 const { error } = await supabaseHelpers.updateTask(taskId, updates);
@@ -331,13 +328,11 @@ export default function ProjectDetail({ projectId, onBack, onNavigate }) {
               milestones={milestones}
               tasks={tasks}
               projectId={projectId}
-              onMilestoneUpdated={async (milestoneId, updates) => {
-                const { error } = await supabaseHelpers.updateMilestone(milestoneId, updates);
-                if (!error) {
-                  setMilestones(milestones.map(milestone =>
-                    milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
-                  ));
-                }
+              onMilestoneUpdated={(milestoneId, updates) => {
+                // Update local state with the data already saved to DB by the drawer
+                setMilestones(milestones.map(milestone =>
+                  milestone.id === milestoneId ? { ...milestone, ...updates } : milestone
+                ));
               }}
               onTaskUpdated={async (taskId, updates) => {
                 const { error } = await supabaseHelpers.updateTask(taskId, updates);

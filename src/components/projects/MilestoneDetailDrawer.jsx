@@ -46,7 +46,7 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
       confidence: parseInt(formData.progress) || 0,  // Map UI 'progress' to DB 'confidence'
     };
 
-    const { error } = await supabaseHelpers.updateMilestone(milestone.id, updates);
+    const { data, error } = await supabaseHelpers.updateMilestone(milestone.id, updates);
 
     if (error) {
       console.error('Error updating milestone:', error);
@@ -58,7 +58,8 @@ const MilestoneDetailDrawer = ({ milestone, tasks = [], onClose, onUpdate, onTas
     setSaving(false);
     setIsEditing(false);
     if (onUpdate) {
-      onUpdate(updates);
+      // Pass the actual data returned from the database instead of just the updates
+      onUpdate(data && data[0] ? data[0] : updates);
     }
   };
 
