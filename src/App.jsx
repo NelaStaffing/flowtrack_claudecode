@@ -14,6 +14,7 @@ import StakeholdersPage from './components/stakeholders/StakeholdersPage';
 import DocumentsView from './components/documents/DocumentsView';
 import BlockersView from './components/blockers/BlockersView';
 import TeamManagementView from './components/team/TeamManagementView';
+import ReportsView from './components/reports/ReportsView';
 
 function App() {
   const { user, loading, signOut } = useAuth();
@@ -131,15 +132,7 @@ function App() {
         return <TeamManagementView />;
 
       case 'reports':
-        return (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-6xl mb-4">📈</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Reports</h2>
-              <p className="text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-        );
+        return <ReportsView />;
 
       case 'clients':
         return <ClientsPage />;
